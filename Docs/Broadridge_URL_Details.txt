@@ -1,0 +1,559 @@
+=================UST==============================
+Specialist 1- Software Engineering, B3
+Lead II - Software Engineering
+A1-fresher, 
+pabitra.maiti@ust.com
+291645@ust.com , Madhumita@25
+Username: pabitra.maiti@ust.com
+Medical Claim
+To access the Prudent portal, please follow the steps below:
+Open the following link: https://ust.prudentplus.in
+Select the option "Login Via SSO"
+Enter your corporate name as UST
+Authenticate yourself to complete the login process
+https://ustsquare.ust.com/home --> Human Resources --> UST Career Architecture (UCA) --> Engineering/Delivery --> 
+[Interview Taken in Jan -26 --> 4 , 4 ] --> 5K
+[Interview Taken in Feb -26 --> 17, 12 ]  --> 
+
+https://ustmsla.com/Account/Index
+Kubera - https://ustglobal.sharepoint.com/Home/SitePages/Home.aspx
+https://timesheet.ust.com/timesheet
+ESS - https://mypayroll.myndsolution.com/LoginSSOSPInitiated.aspx?CID=UST
+ServiceNow- https://ustglobal.service-now.com/ust?id=isolve_ec_dashboard
+
+=============Broadridge===============================
+OneBr - https://brhelix-dwp.onbmc.com/dwp/app/#/catalog
+https://brhelix-rsso.onbmc.com/rsso/start#/catalog
+https://broadridge-my.sharepoint.com/shared
+https://broadride.sharepoint.com/sites/tss/SitePages/Self-Service-Password-Reset-Windows.aspx
+https://broadridge-my.sharepoint.com/my?id=%2Fpersonal%2Fpabitra%5Fmaiti%5Fbroadridge%5Fcom%2FDocuments%2FDocuments
+https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/br_icsdev_dpmtest_app_ecs_cluster/services/br_icsdev_dpmtest_director_core_kafkaproducer_7cf1a1d8/tasks?region=us-east-1
+https://broadgpt.broadridge.net/home
+
+MaitiPa -> Confuence/Git
+360722 --> For HR Workday
+360722@broadridge.com
+pabitra.maiti@broadridge.com
+Ankita@12
+VM - 61020105
+
+Principle Client
+PDF, Print Service, 
+Aggregation , AWS, 
+Kafka, Spring boot, Python,
+
+Specialist I - Software Engineering, S3
+https://git.devops.broadridge.net/ICS-DPM/ics-dpm-pp-dockerfiles
+https://git.devops.broadridge.net/ICS-DPM/ics-dpm-di-lambda/-/tree/master/lambda?ref_type=heads
+
+AWS- https://sts.broadridge.com/adfs/ls/idpinitiatedsignon.aspx
+ECS Deployment Security Group-> Default and Outbound , Service, dpmtest
+DEV Kafka:- https://kafka.webui.ftb.dev.npd.bfsaws.net/ui/bps-kafka/topic/br.communication.orders.commands.0/data?sort=Oldest&partition=All
+			https://kafka.webui.ftb.dev.npd.bfsaws.net/ui/new-dev-kafka/topic
+QA Kafka:- https://kafka.webui.ftb.qa.prd.bfsaws.net/ui/qa-kafka/topic
+UAT Kafka:- https://kafka.webui.ftb.uat.prd.bfsaws.net/ui/trailblazer-kafka/topic
+PRD Kafka:- https://kafka.prod.eisl.ftb.prd.prd.bfsaws.net/ui/prod-eisl-east-kafka/topic
+			admin/eisladmin123
+
+https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
+
+Splunk Dev/QA/UAT:- https://br-nprd.splunkcloud.com/en-US/app/search/search
+Splunk PROD:- https://br.splunkcloud.com/en-US/app/search/search
+Splunk Search:- 
+index="ics-dpm-dev" host="serverless" stage=dev source="dpm-kafka-producer"
+index="ics-dpm-dev" host="serverless" stage=dev source="dpm-kafka-consumer"
+index="ics-dpm-tst" host="serverless" stage=qa source="dpm-kafka-consumer"
+index="ics-dpm-tst" host="serverless" stage=uat source="dpm-kafka-consumer"
+index="ics-dpm-pro" aws_account_id=471112732183 stage=PROD source="dpm-kafka-consumer" communicationOrigin="CCIL-ORDER"
+index="ics-dpm-dev" host="serverless" stage=dev source="dpm-datacleanup-scheduler"
+index="ics-dpm-tst" host="serverless" stage=qa source="dpm-datacleanup-scheduler"
+index="ics-dpm-tst" host="serverless" stage=uat source="dpm-datacleanup-scheduler"
+index="ics-dpm-pro" aws_account_id=471112732183 stage=PROD source="dpm-datacleanup-scheduler"
+
+-------------------------------------------
+DEV URL: jdbc:postgresql://br-icsdev-dpmtest-aurora-auroradb-rds-cls.cluster-c8xxccb2tysr.us-east-1.rds.amazonaws.com:5432/Orders?currentSchema=public
+username: DBUser
+password: "!0l{_RbO5hw[P.=+Fz*^8M8)i5RC=#3^"
+driver-class-name: org.postgresql.Driver
+
+QA URL: jdbc:postgresql://br-icsqa-dpmuev1-aurora-auroradb-rds-cls.cluster-cu37vxfprhly.us-east-1.rds.amazonaws.com:5432/Orders?currentSchema=public
+username: DBUser
+password: "cnYzInFuQV92pfVB"
+driver-class-name: org.postgresql.Driver
+
+Connect with EC2 and get DB connection - 
+QA-> psql --host=br-icsqa-dpmuev1-aurora-auroradb-rds-cls.cluster-cu37vxfprhly.us-east-1.rds.amazonaws.com --port=5432 --username=DBUser --password --dbname=Orders
+UAT->	psql -h br-icsuat-dpmuev1-aurora-auroradb-rds-cls.cluster-cu37vxfprhly.us-east-1.rds.amazonaws.com -p 5432 -U DBUser -W
+
+WFS DEV->	psql --host=br-icsdev-dpmtest-aurora-auroradb-rds-cls.cluster-c8xxccb2tysr.us-east-1.rds.amazonaws.com --port=5432 --username=DBUser --password --dbname=WFS
+			!0l{_RbO5hw[P.=+Fz*^8M8)i5RC=#3^
+WFS QA->	psql --host=br-icsqa-dpmuev1-aurora-auroradb-rds-cls.cluster-cu37vxfprhly.us-east-1.rds.amazonaws.com --port=5432 --username=DBUser --password --dbname=LPL-SCA
+		cnYzInFuQV92pfVB
+UAT->	psql --host=br-icsuat-dpmuev1-aurora-auroradb-rds-cls.cluster-cu37vxfprhly.us-east-1.rds.amazonaws.com --port=5432 --username=DBUser --password --dbname=LPL-SCA
+		qWoM41H8hgIUdL44
+PRD->	psql --host=br-icsprd-dpmuev1-aurora-auroradb-rds-cls.cluster-cdea0aoqihil.us-east-1.rds.amazonaws.com --port=5432 --username=DBUser --password --dbname=WFS
+		7jqPuH8hIK3W5fFE
+	sudo yum install postgresql-server postgresql-contrib
+
+-------------------------------------------
+CREATE DATABASE SocGen WITH OWNER='DBUser' ENCODING='UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8' TABLESPACE=pg_default CONNECTION LIMIT=-1;
+
+DEV, QA, UAT, PROD - CRQ, Lambda, Jenkins,
+Teraform, SRE team
+AWS code deployment - Code deployment in DEV/QA/PROD/UAT. - BRCC Data Prep Manager (DPM) - Confluence_AWS_Prod
+
+
+ICSBRCCPPI
+Timesheet - https://ikare.broadridge.net/mis/jsp/login/loggedUser.jsp
+			http://projectoffice.broadridge.net:120/Resource/CreateNewResource
+			http://projectoffice.broadridge.net/PWA/Timesheet.aspx
+
+https://brhelix-dwp.onbmc.com/dwp/app/#/catalog/category/1913/SBE/SBE
+Raise any request: https://brhelix-dwp.onbmc.com/dwp/app/#/checkout
+Raise checkmarx request: https://brhelix-dwp.onbmc.com/dwp/rest/share/OJSXG33VOJRWKVDZOBST2U2CL5IVKRKTKREU6TSOIFEVERJGORSW4YLOOREWIPKBI5DUETRWJ5MUGMCDK4YECU2GJRHFMWKTIZGE4VSZKBAVEMJGOJSXG33VOJRWKSLEHU2TSMJTEZRW63TUMV4HIVDZOBST2Q2BKRAUYT2HL5EE6TKF
+Generate Checkmarx Report - https://checkmarx.broadridge.net/CxWebClient/Projects.aspx
+
+
+ICS-DPM_DevOps_GitLab_Users
+ICS-DPM_DevOps_Jenkins_Users
+ICS-DPM_DevOps_Nexus_Users
+ICS-DPM_DevOps_Artifact_Users
+QA - ADFS-BR_DPM_TST_QaEngineer_User_Role
+
+Avecto:- https://archer.broadridge.net/Default.aspx  , pabitra.maiti@broadridge.com
+https://remotesupport.broadridge.com
+https://brhelix-dwp.onbmc.com/dwp/app/#/activity
+AWS - https://brhelix-dwp.onbmc.com/dwp/app/#/catalog/category/1913/SBE/SBE
+------------------------
+Project Specifics Docs
+-----------------------
+PFG Print aggregation
+Flowchat- https://lucid.app/lucidchart/50d83b3c-89cc-470e-95b8-9b45a16688df/edit?invitationId=inv_e2e2bc80-be6a-472a-9d4c-8be35f9c08ba&page=0_0#
+https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
+Project Docs:- https://confluence.broadridge.net/display/ICSPFG/Principal+Financial+Group+Home
+PFG - Low level Design:- https://confluence.broadridge.net/pages/viewpage.action?pageId=791709132
+			   https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/867141699/PFG-DPM+Java+CheckMarx+Scans
+Documentation:-		https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/823662488/Print+Aggregation+Service
+
+Leave:-		   https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/564889399/DPM+Team+Vacation+Calendar
+BRCP Proxy Setup:- https://confluence.broadridge.net/display/ICSCFCS/Broadridge+Cloud+Platform+%28BRCP%29+Setup
+brcp proxy
+Document:-					https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/627557940/DPM+Product+Documentation
+
+SSL implementation - 		https://confluence.broadridge.net/spaces/GTOEPM/pages/780706559/GTOEPM-4140+Enable+HTTPS+Flow
+Splunk - https://git.devops.broadridge.net/ICS-DPM/ics-dpm-di-lambda/-/blob/master/src/main/java/com/broadridge/ebcdic/Splunk.java?ref_type=heads
+
+Kafka UI (DEV) - https://eisl-sandbox-kafka-ui.us-east-1.bfcp.dev.npd.bfsaws.net/ui/clusters/DEV%20-%20BPS%20Kafka%20Endpoints/all-topics/br.communication.orders.commands.0/messages?filterQueryType=STRING_CONTAINS&attempt=2&limit=100&page=0&seekDirection=FORWARD&seekType=BEGINNING&keySerde=String&valueSerde=String
+Kafka UI (QA) - https://kafka.webui.ftb.qa.prd.bfsaws.net/ui/qa-kafka/topic
+Kafka UI (UAT) - https://kafka.webui.ftb.uat.prd.bfsaws.net/ui/trailblazer-kafka/topic
+
+Release Process - Release Process - BRCC Data Preparation Manager (DPM) - Confluence_AWS_Prod
+s3 uri to upload the config json - s3://br-icsdev-dpmdi-dataingress-us-east-1-s3/dpmdi_common/client_config/ 
+s3 uri to upload the folder structure - s3://br-icsdev-dpmdi-dataingress-us-east-1-s3/dpmdi_common/client_setup/
+
+https://jira.broadridge.net/secure/RapidBoard.jspa?rapidView=11401&projectKey=ICSBRCCPPI&quickFilter=70836# -> 
+https://jira.broadridge.net/browse/ICSBRCCPPI-3043
+https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html?url=https%3A%2F%2Fsts.broadridge.com%2Fadfs%2Fls%2Fidpinitiatedsignon.aspx&locale=en-us&dest=https%3A%2F%2Fteams.microsoft.com%2Fapi%2Fmt%2Fpart%2Famer-02%2Fbeta%2Fatpsafelinks%2Fgeturlreputationsitev2%2F&pc=9m0D9znSN2gRZxtIiM36rfhTGlUpqfZBkQczA1i%252bPIxwUGSbVmvAZAKvi1KCmjXgb45a%252fV37Ff1zinaO2Drs3pDf8vHQOsNZZVvMcBdb%252fxmOSS56k03zQjLF2O61YiOw076t8e8buDCzCZMbgygUnHXd2SYhQo3QGtm6LU5%252fbXL1XvPUofgFwV2T9OC96H75drnsq3UU45YVSNnj4TLqqUaiM4GFdj%252faEk0J9kHa8QJxZ29IIhjZzsjyp%252fyTWO7P43IvulcYBdwD1wxQOKXSRxYkXQP3lnGiCZ7qz1k8uY96VUvC673%252fHNd5GNpsCAZKskkRp4E0V3MfprnejGnBwjc6GJB6czUOkdHdljrH4qFso8C2iTEcGRpblJYb%252bsfgjfNcHrFTUujwN4auiMT05rkw8XPwraR1C%252flujDhayzNhOKLSR1VhxnhTa0yY0K0PddwiHNUjy4AtLe1EXoy6FamelkfRTPozj1270ffKFu%252bmDWckZkVAJkGQx3HLuDV8%252beQ%252baTbFhM7ns3g7NVYcIWDT77zZGiy5qIpRTcAxediL6kBU1QbSBs2lEPbpkf8YUTM0oVJUN%252bNiRFpG7TBkYS3pKzZtHToSIqbwvp3yBcnePtezCzxDmqrLNsQIBjyxj6XThxAlwaEfYU22CYR788pVJPItVEJNOiRo9y8mUf17mlSS9Q3KrCKcJB%252b5snLFuuhHcPK8RolcmYH9vz7uMvQKC5IUFLCmqo6Py4O9%252f4DCk1X2sp8xr7U0kjydAOQzTutc5IIOjppV%252fWgL51CU1aU2YPxPfCp7%252fJubOKneCiCPDAV15Y1uh8jUF1NGf%252b3LryDA7PsiX3wtRBJufBAeQpHV1dj4FPddvfY9%252fuZkoOsUh%252bUcjs%252b9Aw90J%252fZmT6%252b6e4Fgc8g80YsIv3PWc%252bPb1rJcO6g7%252ftnqjxxUZOf3eoOGhcdU4NV9%252fzDAMiYnri4G%252f%252f14FdsqIDbcpByDVHhU%252b%252frS05lpUmeiuxz97s7UmjFEUBwnrDSWWfCXpE49KnLDnvPMHede0saUu7VHIssyq4TULUdqjUOTW1KoSmyEhQV6jP0PVMA%252fcp2Fe6MZ7wdoyICIC5SjptHTPwPMt0tH49AWMjnT59c1ihwMx3e%252bfupdSZGGx7bURR%252fk4GwLIzLdb2HtgghwpoKXzHk0b5BYshz1penERtWkCVQ%252f9bswfVBA0eN0KBlP0tBCt8BhIynVh3mc37AxsgB17mre2UanPSlFQ%252fGGNX%252b6hwwc6KhHzEnsB2aehsJif8rFMd4CmaudyOX37zs44jJHpYcPGKUIMHFFiQxd%252f0qMb8Iqjs7txtZq7HCYDH82uwk0GJ7MA6xYflGMNhUuxL2lK%252f%252bn%252f6i9fX7K95lQM1zsaejEBM8pxbkK4C%252f%252fRfu09IxlRiW7e%252fT3QATWIgMAnFDGq2a2ktis4w%253d%253d%3B%20expires%3DThu%2C%2006%20Feb%202025%2015%3A44%3A42%20GMT%3B%20path%3D%2F%3B%20SameSite%3DNone%3B%20secure%3B%20httponly&wau=https%3A%2F%2FNAM10.safelinks.protection.outlook.com%2FGetUrlReputation&si=1738569452872%3B1738569452872%3B19%3A841c44de-5d64-4ef5-b8dd-d2589844b43f_bb07a760-9b3c-4c6f-8586-5e75dbb678ce%40unq.gbl.spaces&sd=%7BconvId%3A%2019%3A841c44de-5d64-4ef5-b8dd-d2589844b43f_bb07a760-9b3c-4c6f-8586-5e75dbb678ce%40unq.gbl.spaces%2C%20messageId%3A%201738569452872%7D&ce=prod&cv=49%2F24120100221&ssid=46c04f24-1974-487b-815e-dbd5b61ef851&ring=general&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI0OS8yNDEyMDEwMDIyMSIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ==&bg=%23f0f0f0&fg=%23242424&fg2=%239092c1
+
+
+mvn clean install -DskipTests
+mvn clean install -Dmaven.test.skip=true
+
+ADP ->
+PFG -> Principal Financial Group is a client
+DPM -> (Data Preparation Manager) is a Product
+	PFG is a client which will send us data using REST API - upstream systems process that data and generate PDF files out of it - We DPM team need to collect those PDF's, group them by unique identifier and send them to downstream for further processing, while grouping we need to generate meta data for the batch
+	-> Communication between upstream and DPM is via KAFKA.
+	-> DPM to downstream is file transfer
+	-> CCIL - is a upstream team of DPM
+	-> Print And Marcomm - is a downstream team of DPM
+Ramkumar Sundaram
+
+Upstream System: A data source such as a database, external API, or data producer.
+Intermediate System: A system that processes, transforms, or enriches the data received from the upstream system.
+Downstream System: A system that consumes the processed data, such as a data warehouse, analytics platform, or another application.
+In this pipeline, the upstream system is responsible for generating or providing the initial data. The downstream system depends on the output from the upstream system to perform its functions.
+
+[CCIL]			     [DPM]		 		 [Print And Marcomm]
+[Data Producer] --> [Data Processor] --> [Analytics Platform]
+(Upstream)             (Intermediate)              (Downstream)
+------------------------------------------------------------------
+
+Eclipse Setup-
+https://projectlombok.org/p2
+https://stackoverflow.com/questions/22310414/how-to-configure-lombok-in-eclipse-luna
+java -jar lombok-1.16.18.jar
+
+if kafka consumer read data from topic and before storing into database, consumer got down. in this case how to handle fault tolerance?
+if kafka consumer read data from topic and before storing into database, kafka consumer got down. in this case how to handle kafka consumer fault tolerance?
+
+ex:  I need Adobe to create client presentations which is a part of my duties
+
+-------------------------------------------
+
+Story Refinment Process
+BA is PO for BRX Work
+
+======================Application Deployment in AWS ECS=================================
+Dockerfile  dpm-kafka-producer.jar
+~ $ mkdir target
+~ $ mv dpm-kafka-producer.jar target
+~ $ docker build -t dpm-kafka-producer -f Dockerfile .
+
+~ $ mv dpm-order-service.jar target
+~ $ docker build -t dpm-order-service .
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com
+aws ecr create-repository --repository-name myapp
+ 
+docker tag myapp:latest <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/myapp:latest
+docker push <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/myapp:latest
+
+mv Dockerfile Dockerfile_OS
+mv Dockerfile_OS Dockerfile
+mv Dockerfile_PS Dockerfile
+mv Dockerfile Dockerfile_PS
+--------------------------
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 187777304606.dkr.ecr.us-east-1.amazonaws.com
+aws ecr create-repository --repository-name dpm-kafka-producer
+docker tag dpm-kafka-producer:latest 187777304606.dkr.ecr.us-east-1.amazonaws.com/dpm-kafka-producer:latest
+docker push 187777304606.dkr.ecr.us-east-1.amazonaws.com/dpm-kafka-producer:latest
+
+aws ecr create-repository --repository-name dpm-order-service
+docker tag dpm-order-service:latest 187777304606.dkr.ecr.us-east-1.amazonaws.com/dpm-order-service:latest
+docker push 187777304606.dkr.ecr.us-east-1.amazonaws.com/dpm-order-service:latest
+
+~ $ mv dpm-datacleanup-scheduler.jar target
+~ $ docker build -t dpm-datacleanup-scheduler -f Dockerfile_Scheduler .
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 187777304606.dkr.ecr.us-east-1.amazonaws.com
+aws ecr create-repository --repository-name dpm-datacleanup-scheduler
+docker tag dpm-datacleanup-scheduler:latest 187777304606.dkr.ecr.us-east-1.amazonaws.com/dpm-datacleanup-scheduler:latest
+docker push 187777304606.dkr.ecr.us-east-1.amazonaws.com/dpm-datacleanup-scheduler:latest
+
+====================================================================================================================================
+vpc-0ab6253086419950d / dev-vpc
+
+Farget, EC2
+brcp aws login
+brcp aws console
+
+Security groups
+sg-083de31d3fae58010 (BR-AWS-Outbound)
+sg-0e470f744d0bd8d91 (BR-AWS-Service)
+sg-04fdb966f3ccc0a50 (Inbound)
+sg-004256f2080f2805d (msk) - for Kafka
+
+sg-0c9a8e6665b2962ea (default)
+sg-04fdb966f3ccc0a50 (br_icsdpmdev_dpmtest_ecs_sg) NA
+sg-004256f2080f2805d (br_icsdpmdev_dpmdi_msk_sg) NA
+sg-090088e5f5092a654 (ECS)
+
+ENI ID
+eni-0052f2d233fa74d7e
+Subnet
+subnet-03e74a940e5a92855
+subnet-03b93e0e448e171b2
+
+Task role
+br_icsdev_dpmharppada_ecstd_role  --> NA
+Task role
+br_icsdev_dpmtest_ecstd_role 
+Task execution role
+ecsTaskExecutionRole
+
+Load balancer
+dev-dpmtest-app-alb
+https://internal-dev-dpmtest-app-alb-527263140.us-east-1.elb.amazonaws.com/ready
+
+br_dpm_ecstest_cluster --> I have Created
+===================================================
+Find out and Kill Process in local System:- 
+netstat -ano | findstr :8080
+taskkill /PID 23104 /F
+
+java -DPROFILE=dev -jar dpm-kafka-producer.jar
+java -DPROFILE=dev -jar dpm-order-service.jar
+java -DPROFILE=dev -jar dpm-datacleanup-scheduler-0.0.1-SNAPSHOT.jar
+
+Publish Order (Stored in Order_Table):- https://apptest.us-east-1.dpm.dev.npd.bfsaws.net/producer/api/publish/br.communication.orders.commands.0
+Publish Document Status (Stored in Retrieve_Table):- https://apptest.us-east-1.dpm.dev.npd.bfsaws.net/producer/api/publish/br.communication.documents.notifications.0
+Publish Order Notifications (Stored in Notification_Table):- https://apptest.us-east-1.dpm.dev.npd.bfsaws.net/producer/api/publish/br.communication.orders.notifications.0
+Publish Document Retrieve :- https://internal-dev-dpmtest-app-alb-527263140.us-east-1.elb.amazonaws.com/producer/api/publish/br.communication.document.retrieve.0 --> Calling from Glue job
+
+
+
+S3 details of CCIL team 
+bucket
+br-icsdev-ccil-orders-us-east-1-s3
+Folder structure sample - this changes from file to file
+/PFG/9000/Order1/doc1/somefile.pdf
+
+POC
+SRE : Rambabu Bugatha
+DEV : Korott, Leena
+
+https://br-dpm-out-us-east-1-s3.s3.us-east-1.amazonaws.com/dpm-kafka-producer.jar
+https://br-dpm-out-us-east-1-s3.s3.us-east-1.amazonaws.com/dpm-kafka-producer-0.0.1-SNAPSHOT-lambda-package.zip
+
+Load Balancer
+https://www.youtube.com/watch?v=6Hj-stf51Bc&list=PLqoUmUbJ_zDHPwK-ZWATXiYrUXwWkLY65
+https://www.youtube.com/watch?v=kSCfY2cgu8s
+
+Lambda Function
+https://www.youtube.com/watch?v=J0aEfUUervE&t=1364s
+
+
+https://br-dpm-out-us-east-1-s3.s3.us-east-1.amazonaws.com/dpm-lambda-function-1.0-SNAPSHOT-lambda-package.zip
+feature/dpm-datacleanup-scheduler
+
+Terraform/AWS Resources Code Deployment: - https://confluence.broadridge.net/spaces/ICSBRCCSRE/pages/588489443/AWS+Resources+Code+Deployment
+BRX Containers Deployment :- https://confluence.broadridge.net/spaces/ICSBRCCSRE/pages/693224062/BRX+Containers+Deployment
+CONTAINER Deployment Updates :- https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/842075513/CONTAINER+Deployment+Updates
+Code deployment in DEV/QA/PROD/UAT :- https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/605928249/Code+deployment+in+DEV+QA+PROD+UAT.
+
+
+Checking Logs in EC2 Instance
+Go to ECS service --> Task --> Select and click on any running Task --> Under Configuration (Launch type EC2 | i-06b0d4da429263586) --> Click on Connect --> Session Manager  --> Click on Connect --> Pass below commands
+
+sudo su -
+docker ps -a
+docker ps -a --filter "name=br_icsdev_dpmtest_kafkaconsumer"
+docker ps -a | grep br_ics_dpm_kafkaconsumer
+docker ps -a --filter "name=br_ics_dpm_datacleanupscheduler:d4fd6ab4"
+docker ps -a --filter "name=datacleanup"
+docker ps -a --filter "status=exited"
+docker ps -a | grep br_ics_dpm_datacleanupscheduler:6e028bfc
+docker logs -t processId
+docker logs -t a5cbc7f2662c
+
+CUSTOM_TF_VARS :-
+
+kafkaproducer_containerimagetag = "7ef3bf78"
+kafkaconsumer_containerimagetag = "332d9f57"
+datacleanup_containerimagetag = "eaafb2ce"
+
+ics-dpm/br_ics_dpm_kafkaproducer:cdc9e98b, 7ef3bf78, 8d410814, f51a76d3, 4ee50588, cf6ee687
+ics-dpm/br_ics_dpm_kafkaconsumer:332d9f57, 69deb83f, 85606c2b, 67b97593, e7476b98, 3079b4e3, f362a61d, 79b9a402, 45a27b5e, ebaab7cb
+ics-dpm/br_ics_dpm_datacleanupscheduler:eaafb2ce, 63585c58, 0dd8a122, b30c5ec0,a9cb80c7, 57207b89, 70bab511, df1ac72b, 36bd3eff, c48fc1af
+
+Current Tag:
+kafkaconsumer = 69deb83f
+kafkaproducer = 7ef3bf78
+datacleanup = a9cb80c7
+Last deployment on Mar 20th
+Last Tag:
+br_icsprd_dpmuev1_datacleanup_a9cb80c7
+
+feature/dpm-kafka-producer
+feature/dpm-kafka-consumer
+feature/dpm-datacleanup-scheduler
+
+
+Lambda : br_icsdev_dpmdi_lmbd_kafka_services (br-icsdev-dpmdi-kafkaservices-api-gw)
+		 br_icsqa_dpmdi_lmbd_kafka_services
+		 br_icsuat_dpmdi_lmbd_kafka_services
+API Gateway: 
+
+Build Image
+----------
+
+Promote_Docker_Image
+--------------------
+SOURCE_DOCKER_REPOSITORY: ics-dpm-docker-test-dev
+NONPROD_IMAGE_PATH: ics-dpm/br_ics_dpm_kafkaproducer:c9e9d4e6
+
+Copy Container Image to ECR:
+---------------------------
+IMAGE_NAME: 
+SDLC: dev
+REGION: us-east-1
+DEVOPS_SHORT_NAME: ICS-DPM
+
+Deployment in DEV
+-----------------
+TF_COMMAND: apply 		/ plan
+TF_TARGET: 
+SDLC_ENV: dev
+DEPLOY_MODULE: us-east-1-ecs 		/ us-east-1-apigw	/ data-ingress-glue
+TF_NEXUS_REPO: ICS-DPM-GENERIC-TEST-DEV/ics-dpm
+TF_ARTIFACT: ics-dpm-dev_1.0.0-9280d3a.tar 		/ ics-dpm-dev_1.0.0-2020bb3.tar / ics-dpm-dev_1.0.0-b18874c.tar / 
+TF_SEC_ARTIFACT: tss-foo_1.0.0-abcdefg.tar
+ENV_ALIAS: test
+CUSTOM_TF_VARS: 
+APPROVED_CHANGES: 
+======================
+
+Deployment in QA
+-----------------
+TF_COMMAND: apply 		/ plan
+TF_TARGET: 
+SDLC_ENV: dev
+DEPLOY_MODULE: us-east-1-ecs 		/ us-east-1-apigw
+TF_NEXUS_REPO: ICS-DPM-GENERIC-TEST-DEV/ics-dpm
+TF_ARTIFACT: ics-dpm-dev_1.0.0-9280d3a.tar 		/ ics-dpm-dev_1.0.0-2020bb3.tar / ics-dpm-dev_1.0.0-b18874c.tar / 
+TF_SEC_ARTIFACT: tss-foo_1.0.0-abcdefg.tar
+ENV_ALIAS: test 		/ di
+CUSTOM_TF_VARS: 
+APPROVED_CHANGES: 
+======================
+
+Deployment in UAT
+-----------------
+TF_COMMAND: apply 		/ plan
+TF_TARGET: 
+SDLC_ENV: dev
+DEPLOY_MODULE: us-east-1-ecs 		/ us-east-1-apigw
+TF_NEXUS_REPO: ICS-DPM-GENERIC-TEST-DEV/ics-dpm
+TF_ARTIFACT: ics-dpm-dev_1.0.0-9280d3a.tar
+TF_SEC_ARTIFACT: tss-foo_1.0.0-abcdefg.tar
+ENV_ALIAS: test 		/ di
+CUSTOM_TF_VARS: 
+APPROVED_CHANGES: 
+==================================================================
+Everyone - Just a reminder. Please note all UAT & QA deployments have to happen during this window. No exceptions. 
+
+Morning: 6:00 AM – 8:00 AM Eastern (3:30 PM to 5:30 PM IST)
+Afternoon: 4:00 PM – 6:00 PM Eastern (1:30 AM to 3:30 AM IST)
+
+Adding India time as well.
+Morning: (EST): 6:00 AM – 8:00 AM
+India Time (IST): 3:30 PM – 5:30 PM
+
+Afternoon: (EST): 4:00 PM – 6:00 PM
+India Time (IST): 1:30 AM – 3:30 AM
+
+Deployment Cadence
+
+Dev Deployments → Monday & Wednesday
+
+QA Deployments → Tuesday & Thursday (post successful Dev validation)
+
+Friday → No deployments (kept as a break day to avoid weekend-related risks)
+
+==================================================================
+
+Docker Build
+
+ics-dpm/ics-dpm/br_ics_dpm_kafkaconsumer
+
+1 PENDING -- DPM
+2 FAILED -- CCIL
+3 COMPLETED -- CCIL
+4 PROCESSING -- PY - DPM
+5 PRINT-READY -- PY - DPM
+
+
+
+https://internal-ics-dpm-dev-ecs-lb-8435083.us-east-1.elb.amazonaws.com/ready
+
+apptest.us-east-1.dpm.dev.npd.bfsaws.net --> Host Name
+https://internal-ics-dpm-dev-ecs-lb-8435083.us-east-1.elb.amazonaws.com --> Dev DNS
+https://internal-dev-dpmtest-app-alb-527263140.us-east-1.elb.amazonaws.com --> TF DNS
+
+
+appuev1.us-east-1.dpm.uat.prd.bfsaws.net
+appuev1.us-east-1.dpm.qa.prd.bfsaws.net
+
+
+In my springboot rest service below headers details coming. Is there any way to filter out only user defined headers?
+   
+security_groups - https://jenkins-edw-dev2.devops.broadridge.net/job/CSG/job/ICS-DPM/job/ics-dpm-tf/job/deploy/5363/console
+iam-prereqs - https://jenkins-edw-dev2.devops.broadridge.net/job/CSG/job/ICS-DPM/job/ics-dpm-tf/job/deploy/5365/console
+
+Python Setup in Local System
+-----------------------------
+1) Install Python latest version in your System
+2) Add below Environment Variables
+	PYTHON_HOME=C:\Program Files\Python39
+	Edit path and add separately %PYTHON_HOME% and C:\Users\MaitiPa\AppData\Roaming\Python\Python39\Scripts
+3) Disable python.exe and python3.exe App Installer inside  Settings --> Apps --> Advanced app settings --> App execution aliases
+4) install Django:
+	pip install Django
+django-admin --version
+python -m pip install --upgrade pip
+django-admin startproject demo
+
+
+ObjectMapper mapper = new ObjectMapper();
+JsonNode jsonNode = mapper.readTree(content);
+System.out.println(jsonNode.toPrettyString());
+
+https://us-east-1.console.aws.amazon.com/gluestudio/home?region=us-east-1#/editor/job/br_icsdev_dpmkhadkab_csv_loadstage/script
+
+Glue Job
+========
+Connections: Additional network connections
+	br_icsdev_dpmdi_non_routable_nt_connection
+	br_icsdev_dpmtest_postgres_jdbc_conn
+
+Libraries : Python library path
+	s3://br-icsdev-dpmtest-code-inventory-us-east-1-s3/ics-dpm-pp68_0.0.1-ef6c0f5/config/splunk.py
+
+Additional Python modules path
+	jsonformatter,xmltodict
+
+IAM Role: 
+br_icsdev_dpmdi_glue_service_role
+
+===================================================
+
+https://broadridge-my.sharepoint.com/shared?login_hint=Pabitra%2EMaiti%40broadridge%2Ecom&source=waffle
+
+https://archer.broadridge.net/Default.aspx
+
+https://brhelix-dwp.onbmc.com/dwp/app/#/catalog
+
+https://lucid.app/lucidchart/50d83b3c-89cc-470e-95b8-9b45a16688df/edit?invitationId=inv_e2e2bc80-be6a-472a-9d4c-8be35f9c08ba&page=0_0#
+
+https://jira.broadridge.net/secure/RapidBoard.jspa?rapidView=11401&projectKey=ICSBRCCPPI&view=planning.nodetail&quickFilter=70836&issueLimit=100#
+
+https://jira.broadridge.net/secure/RapidBoard.jspa?rapidView=36360
+
+https://broadride.sharepoint.com/sites/tss/SitePages/Self-Service-Password-Reset-Windows.aspx
+
+https://git.devops.broadridge.net/ICS-DPM/ics-dpm-di-lambda/-/tree/Pabitra?ref_type=heads
+
+https://git.devops.broadridge.net/ICS-DPM/ics-dpm-pp-dockerfiles/-/tree/feature/dpm-kafka-producer?ref_type=heads
+
+https://git.devops.broadridge.net/ICS-DPM/ics-dpm-tf
+
+https://projectoffice.broadridge.net/PWA/Timesheet.aspx
+
+https://confluence.broadridge.net/spaces/ICSBRCCSRE/pages/693224062/BRX+Containers+Deployment
+
+https://confluence.broadridge.net/spaces/ICSBRCCSRE/pages/588489443/AWS+Resources+Code+Deployment
+
+https://checkmarx.broadridge.net/CxRestAPI/auth/#/login?ReturnUrl=%2FCxRestAPI%2Fauth%2Fidentity%2Fconnect%2Fauthorize%2Fcallback%3Fclient_id%3Dcxsast_client%26redirect_uri%3Dhttps%253A%252F%252Fcheckmarx.broadridge.net%252Fcxwebclient%252FauthCallback.html%253F%26response_type%3Dcode%26scope%3Dsast_api%2520openid%2520sast-permissions%2520access-control-permissions%2520access_control_api%26state%3D4727723a4ce64bbf9a6d3c98004f04ae%26code_challenge%3D8LNKyg5v3atwwpo_iju-pbhhbxqzB6n_1mlntQiaBrA%26code_challenge_method%3DS256%26prompt%3Dtrue%26acr_values%3DcxOrigin%253AWebPortal%26response_mode%3Dquery
+
+https://br-nprd.splunkcloud.com/en-US/app/search/search?earliest=-30m%40m&latest=now
+
+https://br.splunkcloud.com/en-US/app/search/search
+
+https://broadgpt.broadridge.net/home
+
+https://eisl-sandbox-kafka-ui.us-east-1.bfcp.dev.npd.bfsaws.net/ui/clusters/DEV%20-%20BPS%20Kafka%20Endpoints/all-topics/test/messages?keySerde=String&valueSerde=String&limit=100
+
+https://brhelix-smartit.onbmc.com/smartit/app/#/
+
+https://brhelix-smartit.onbmc.com/smartit/app/#/
+
+https://jenkins-oc.devops.broadridge.net/login?from=%2Foperations-center-openid%2Fauthenticate%3Fresponse_type%3Dcode%26scope%3Dopenid%26state%3Da7f02c9b-527d-4112-9028-4ccb88eefda3%26nonce%3D4dd09326-e5cb-4a70-a03b-de7553b22594%26client_id%3D3-Development%252520Controller%25252003%26redirect_uri%3Dhttps%253A%252F%252Fjc-dev3.devops.bfsaws.net%252FsecurityRealm%252FfinishLogin%26claims%3D%257B%2522id_token%2522%253A%257B%2522name%2522%253Anull%252C%2522clusterSessionId%2522%253Anull%252C%2522email%2522%253Anull%252C%2522description%2522%253Anull%252C%2522properties%2522%253Anull%252C%2522groups%2522%253Anull%257D%252C%2522userinfo%2522%253A%257B%257D%257D
+
+https://eisl-sandbox-kafka-ui.us-east-1.bfcp.dev.npd.bfsaws.net/ui/clusters/DEV%20-%20BPS%20Kafka%20Endpoints/all-topics?perPage=25&hideInternal=true
+
+https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/823662488/Print+Aggregation+Service
+
+https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/823662488/Print+Aggregation+Service
+
+https://confluence.broadridge.net/spaces/ICSBRCCPPI/pages/863669902/DPM+Code+Push+and+Deployment#DPMCodePushandDeployment-CodeDeploymentProcess
+
+https://kafka.prod.eisl.ftb.prd.prd.bfsaws.net/ui/prod-eisl-east-kafka/topic
+
+https://jenkins-oc.devops.broadridge.net/login?from=%2Foperations-center-openid%2Fauthenticate%3Fresponse_type%3Dcode%26scope%3Dopenid%26state%3D0886fd28-6d2e-4e96-b7cb-1c33766ca73f%26nonce%3De7ecfdf5-d8e8-4f7d-b7fe-068b0d9b5a93%26client_id%3D5-Cloud%252520DR%252520Production%252520Shared%252520Services%26redirect_uri%3Dhttps%253A%252F%252Fjenkins.jenkinsha.ssprd.bfsaws.net%252FsecurityRealm%252FfinishLogin%26claims%3D%257B%2522id_token%2522%253A%257B%2522name%2522%253Anull%252C%2522clusterSessionId%2522%253Anull%252C%2522email%2522%253Anull%252C%2522description%2522%253Anull%252C%2522properties%2522%253Anull%252C%2522groups%2522%253Anull%257D%252C%2522userinfo%2522%253A%257B%257D%257D
+
+https://kafka.webui.ftb.qa.prd.bfsaws.net/ui/qa-kafka/topic
+
+https://kafka.webui.ftb.uat.prd.bfsaws.net/ui/trailblazer-kafka/topic/br.communication.documents.notifications.0/groups
+
+

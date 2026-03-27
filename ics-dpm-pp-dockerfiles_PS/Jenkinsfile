@@ -1,0 +1,36 @@
+pipeline {
+    agent { label "docker_build_agent" }
+parameters {
+        string (
+            name: 'USERNAME',
+            description: 'User Name',
+            defaultValue: ''
+        )
+        string (
+            name: 'PASSWORD',
+            description: 'Passwod',
+            defaultValue: ''
+        )
+    }
+    environment {
+        artifactoryurl = 'artifacts.devops.bfsaws.net/docker-test-dev'
+    }
+    stages {
+        stage('Pull Image and push') {
+            
+            steps {
+
+                withCredentials([usernamePassword(credentialsId: 'nexus-upload-user', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                
+                sh """
+                    docker login -u $USERNAME -p $PASSWORD $artifactoryurl
+                    docker pull artifacts.devops.bfsaws.net/docker-test-dev/brma/br_gto_brma_director:11.3.0-dev1
+                    docker tag artifacts.devops.bfsaws.net/docker-test-dev/brma/br_gto_brma_director:11.3.0-dev1 nexus.devops.broadridge.net:7000/third-party/director_server:11.3.0-dev1
+                    docker push nexus.devops.broadridge.net:7000/third-party/director_server:11.3.0-dev1
+                """  
+                }
+            }
+        }
+    
+    }
+}
