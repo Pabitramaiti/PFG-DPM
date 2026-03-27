@@ -1,0 +1,21 @@
+{
+  "columns": [
+    {
+      "column_name": "key",
+      "type": "string"
+    }],
+  "AUX": {
+    "key": {
+      "key": "CALH-ACCT-NUM",
+      "type": "String",
+      "trim": true
+    }
+  },
+  "table_config": {
+    "table_name_pattern": "{client_id}_Liabilities_%s%s%s_Reference_Lookup_temp",
+    "position:1":"8:9",
+    "position:2": "11:12",
+    "position:3": "5:6",
+    "dest_table_name_pattern": "{client_id}_Liabilities_%s%s%s_Reference_Lookup"
+  }
+}

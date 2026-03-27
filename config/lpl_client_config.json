@@ -1,0 +1,925 @@
+{
+    "clientName": "lpl_sca",
+    "clientId": "000001",
+    "applicationName": "LPL-SCA",
+    "teamsId": "544ba01a.Broadridge.onmicrosoft.com@amer.teams.ms",
+    "clientProduct": [],
+    "runType": [
+        "test",
+        "prod"
+    ],
+    "fileType": {},
+    "inputPath": "lpl_sca/input/",
+    "filesToProcess": [
+        {
+            "filename": "XFSPERM.LPLWIF.I3.INPUT.[A-Z]{3}[0-3][0-9].[^.]+$",
+            "StepFunction": [
+                {
+                    "name": "validation",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_DEBATCH",
+                    "sfStepsToDone": {
+                        "validationColumner": {
+                            "outputPath": "lpl_sca/output",
+                            "outputExtension": ".json",
+                            "dataAttributes": {
+                                "statementRecType": "050",
+                                "allowEmptyLines": false,
+                                "minimumRecordLength": 21,
+                                "fileType": "driver",
+                                "header": {
+                                    "present": true,
+                                    "recordCount": "4",
+                                    "recType": {
+                                        "present": true,
+                                        "value": [
+                                            "001",
+                                            "002"
+                                        ],
+                                        "startPosition": 0,
+                                        "endPosition": 2
+                                    }
+                                },
+                                "trailer": {
+                                    "present": true,
+                                    "recordCount": "4",
+                                    "recType": {
+                                        "present": true,
+                                        "value": [
+                                            "998",
+                                            "999"
+                                        ],
+                                        "startPosition": 0,
+                                        "endPosition": 2
+                                    }
+                                }
+                            }
+                        },
+                        "ACKEmail": {
+                            "skip_email_send": false,
+                            "recipient_emails": [
+                                "prasad.dhulipala@broadridge.com"
+                            ],
+                            "cc_emails": [
+                                "vinay.kumaran@broadridge.com"
+                            ],
+                            "subject": "test subject for the email",
+                            "body": "test body text for the email",
+                            "attachment_flag": false,
+                            "object_prefix": "",
+                            "pattern": ""
+                        }
+                    }
+                },
+                {
+                    "name": "debatch",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_DEBATCH",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "debatch": {
+                            "outputPath": "lpl_sca/output",
+                            "send_to_kafka_flag": "false",
+                            "done_file_flag": "False",
+                            "is_seperate_header_required": " ",
+                            "is_seperate_trailer_required": " ",
+                            "topic": " ",
+                            "debatch_kafka": " ",
+                            "done_folder_path": " ",
+                            "config": {
+                                "recordType": {
+                                    "recordStart": 0,
+                                    "recordEnd": 2
+                                },
+                                "statementIdentifier": "050",
+                                "outputRecords": "lpl_sca/wip/to_brcc",
+                                "outputHeaders": "lpl_sca/wip/headers",
+                                "outputTrailers": "lpl_sca/wip/trailers",
+                                "comboRecords": [
+                                    "050",
+                                    "060",
+                                    "065",
+                                    "070",
+                                    "090",
+                                    "100",
+                                    "200",
+                                    "230",
+                                    "300",
+                                    "500"
+                                ],
+                                "headers": [
+                                    "001",
+                                    "002",
+                                    "010"
+                                ],
+                                "trailers": [
+                                    "998",
+                                    "999"
+                                ],
+                                "accountInfo": {
+                                    "accountStart": 12,
+                                    "accountEnd": 20
+                                },
+                                "trig_folder": "lpl_sca/input",
+                                "createTrig": true,
+                                "only_combo": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "multifile_validation_report_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].csv",
+            "fileType": "csv",
+            "StepFunction": [
+                {
+                    "name": "Multi File Report step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_MULTIFILE_REPORTING",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "multifileValidationReport": {
+                            "inputFolder": "lpl_sca/input/",
+                            "outputFolder": "lpl_sca/output/",
+                            "email_config_str": {
+                                "email_to_addr": "gillian.evers@broadridge.com",
+                                "email_subject": "LPL STATEMENTS (C920) - ME FILES VERIFICATION REPORT",
+                                "run_date": "07/01/25",
+                                "run_time": "21:46:17",
+                                "statement_period": "JUL 2025",
+                                "title": "LPL STATEMENTS ME FILES VERIFICATION REPORT",
+                                "body_text": "IMPORTANT NOTE\n==============\nTHIS REPORT VERIFIES THE RECEIPT OF A FILE BUT DOES NOT VALIDATE THE DATA.\nEACH OF THESE FILES PRODUCE AN INDIVIDUAL E-MAIL REPORT THAT PROVIDES DETAILED DATA TO VALIDATE THE FILE.\nTHESE INDIVIDUAL REPORTS NEED TO BE RECEIVED BY BOTH BROADRIDGE AND LPL.\n***THIS REPORT DOES NOT VERIFY THE RECEIPT OF THE BETA SDF FILES\n\n\nALL LPL MONTHEND FILES HAVE BEEN RECEIVED\n\n"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "multifile-validation-kafka-trigger_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].txt",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "Kafka step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_KAFKA",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "kafka_load": {
+                            "send_folder": "lpl_sca/wip/to_brcc/",
+                            "save_folder": "lpl_sca/save/",
+                            "failed_folder": "lpl_sca/failed/",
+                            "topic_name": "br.communication.lpl.stmt.brx.documents",
+                            "file_formats": "txt",
+                            "kafka_url_parameter": "dpm-kafka-dev-url",
+                            "region": "us-east-1"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "lpl_sca/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^(?:REPTITLE_SCA_|STMNT_SUPPRESSION_SCA_|MSG_ACCTS_SCA_|REPINFO_LOGO_SCA_)\\d{4}-\\d{2}-\\d{2}.DAT$",
+            "checkSum": false,
+            "fileType": "dat",
+            "StepFunction": [
+                {
+                    "name": "Validation step",
+                    "requiredCheckSum": false,
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_CONVERSION",
+                    "sfStepsToDone": {
+                        "PositionalValidation": {
+                            "return_report_config": {
+                                "REPTITLE_SCA": {
+                                    "delimiter": {
+                                        "fixed_ranges": [
+                                            [
+                                                0,
+                                                7
+                                            ],
+                                            [
+                                                7,
+                                                37
+                                            ],
+                                            [
+                                                37,
+                                                77
+                                            ],
+                                            [
+                                                77,
+                                                84
+                                            ]
+                                        ]
+                                    },
+                                    "header_delimiter": "|",
+                                    "header_record": "REPID|LOGO|TITLE|GROUP",
+                                    "return_report_layout": {
+                                        "HEADER": "THIS REPORT VERIFIES THE RECEIPT OF A FILE AND CHECKS RECORD COUNT BUT DOES NOT VALIDATE THE DATA.",
+                                        "REPORT FOR THE PERIOD": "{REPORT_PERIOD}",
+                                        "FILE NAME": "{FILE_NAME}",
+                                        "ENVIRONMENT": "{STAGE}",
+                                        "STATUS": "{STATUS}",
+                                        "FILE RECEIVED DATE/TIME": "{DATETIME}",
+                                        "FILE LOAD DATE/TIME:": "{DATETIME}",
+                                        "LOADED RECORD COUNT": "{RECORD_COUNT}",
+                                        "HEADER ": "For any support or questions contact : InfocusWealthDCOE@broadridge.com"
+                                    }
+                                },
+                                "STMNT_SUPPRESSION_SCA": {
+                                    "delimiter": " ",
+                                    "header_delimiter": "|",
+                                    "header_record": "ACCOUNT_NUMBER|DELIVERY_INDICATOR|SUB_FIRM_ID|EMAIL",
+                                    "return_report_layout": {
+                                        "HEADER": "THIS REPORT VERIFIES THE RECEIPT OF A FILE AND CHECKS RECORD COUNT BUT DOES NOT VALIDATE THE DATA.",
+                                        "REPORT FOR THE PERIOD": "{REPORT_PERIOD}",
+                                        "FILE NAME": "{FILE_NAME}",
+                                        "ENVIRONMENT": "{STAGE}",
+                                        "STATUS": "{STATUS}",
+                                        "FILE RECEIVED DATE/TIME": "{DATETIME}",
+                                        "FILE LOAD DATE/TIME:": "{DATETIME}",
+                                        "LOADED RECORD COUNT": "{RECORD_COUNT}",
+                                        "HEADER ": "For any support or questions contact : InfocusWealthDCOE@broadridge.com"
+                                    }
+                                },
+                                "MSG_ACCTS_SCA": {
+                                    "delimiter": " ",
+                                    "header_delimiter": "|",
+                                    "header_record": "MESSAGE_IDENTIFIER|MESSAGE_TYPE|MESSAGE_KEY",
+                                    "allow_variable_length": true,
+                                    "return_report_layout": {
+                                        "HEADER": "THIS REPORT VERIFIES THE RECEIPT OF A FILE AND CHECKS RECORD COUNT BUT DOES NOT VALIDATE THE DATA.",
+                                        "REPORT FOR THE PERIOD": "{REPORT_PERIOD}",
+                                        "FILE NAME": "{FILE_NAME}",
+                                        "ENVIRONMENT": "{STAGE}",
+                                        "STATUS": "{STATUS}",
+                                        "FILE RECEIVED DATE/TIME": "{DATETIME}",
+                                        "FILE LOAD DATE/TIME:": "{DATETIME}",
+                                        "LOADED RECORD COUNT": "{RECORD_COUNT}",
+                                        "HEADER ": "For any support or questions contact : InfocusWealthDCOE@broadridge.com"
+                                    }
+                                },
+                                "REPINFO_LOGO_SCA": {
+                                    "delimiter": "|",
+                                    "header_delimiter": "|",
+                                    "header_identifiers": [
+                                        "\"RepID\""
+                                    ],
+                                    "header_record": "\"RepID\"|\"MgrID\"|\"RepType\"|\"FirmID\"|\"FirstName\"|\"MiddleName\"|\"LastName\"|\"MailStreet1\"|\"MailStreet2\"|\"MailCity\"|\"MailState\"|\"MailZip\"|\"MailCountry\"|\"BusStreet1\"|\"BusStreet2\"|\"BusCity\"|\"BusState\"|\"BusZip\"|\"BusCountry\"|\"BusPhone\"|\"Extension\"|\"Email\"|\"WebAddr\"|\"MasterBankID\"|\"BankID\"|\"SubSubFirm\"|\"IsTerminated\"|\"LtrLogoFileName\"|\"StmntsLogoFileName\"|\"LogoSource\"",
+                                    "trailer_delimiter": "|",
+                                    "trailer_position": "2",
+                                    "trailer_identifiers": [
+                                        "REPINFO_LOGO"
+                                    ],
+                                    "trailer_record_count_index": "3",
+                                    "trailer_count_type": "TOTAL",
+                                    "support_email": "InfocusWealthDCOE@broadridge.com",
+                                    "return_report_layout": {
+                                        "HEADER": "{LPL_EMAIL_RECEIPT}",
+                                        "REPORT FOR THE PERIOD": "{REPORT_PERIOD}",
+                                        "FILE NAME": "{FILE_NAME}",
+                                        "ENVIRONMENT": "{STAGE}",
+                                        "STATUS": "{STATUS}",
+                                        "FILE RECEIVED DATE/TIME": "{LPLDATETIME}",
+                                        "FILE LOAD DATE/TIME:": "{LPLDATETIME}",
+                                        "RECEIVED RECORD COUNT FROM SOURCE": "{RECORD_COUNT_PER_TRAILER}",
+                                        "LOADED RECORD COUNT": "{RECORD_COUNT}",
+                                        "HEADER ": "{SUPPORT_EMAIL}"
+                                    }
+                                }
+                            }
+                        },
+                        "ACKEmail": {
+                            "recipient_emails": [
+                                "prasad.dhulipala@broadridge.com"
+                            ],
+                            "cc_emails": [
+                                "vinay.kumaran@broadridge.com"
+                            ],
+                            "subject": "test subject text for the email",
+                            "body": "test body text for the email",
+                            "attachment_flag": false,
+                            "failureMailFlag": false,
+                            "object_key": "",
+                            "object_prefix": "",
+                            "pattern": "",
+                            "skip_email_send": false,
+                            "email_input_file": "",
+                            "email_input_format": "json",
+                            "email_output_format": "columnar",
+                            "email_output_delimiter": " : "
+                        }
+                    }
+                },
+                {
+                    "name": "Conversion step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "PositionalToJSON": {
+                            "config": {
+                                "REPTITLE_SCA": {
+                                    "delimiter": {
+                                        "fixed_ranges": [
+                                            [
+                                                0,
+                                                7
+                                            ],
+                                            [
+                                                7,
+                                                37
+                                            ],
+                                            [
+                                                37,
+                                                77
+                                            ],
+                                            [
+                                                77,
+                                                84
+                                            ]
+                                        ]
+                                    },
+                                    "header_delimiter": "|",
+                                    "header_record": "REPID|LOGO|TITLE|GROUP"
+                                },
+                                "STMNT_SUPPRESSION_SCA": {
+                                    "delimiter": " ",
+                                    "header_delimiter": "|",
+                                    "header_record": "ACCOUNT_NUMBER|DELIVERY_INDICATOR|SUB_FIRM_ID|EMAIL"
+                                },
+                                "MSG_ACCTS_SCA": {
+                                    "delimiter": {
+                                        "special_config": {
+                                            "firm_ids": [
+                                                "001"
+                                            ],
+                                            "sub_firm_range": [
+                                                2,
+                                                5
+                                            ],
+                                            "prefix_map": {
+                                                "GL": [
+                                                    "Global_Messages",
+                                                    [
+                                                        5,
+                                                        8
+                                                    ]
+                                                ],
+                                                "LI": [
+                                                    "Account_List",
+                                                    [
+                                                        5,
+                                                        13
+                                                    ]
+                                                ],
+                                                "IN": [
+                                                    "Institute_Messages",
+                                                    [
+                                                        5,
+                                                        8
+                                                    ]
+                                                ],
+                                                "BA": [
+                                                    "Balance_Messages",
+                                                    [
+                                                        5,
+                                                        8
+                                                    ]
+                                                ],
+                                                "PC": [
+                                                    "Product_Class_Messages",
+                                                    [
+                                                        5,
+                                                        8
+                                                    ]
+                                                ],
+                                                "RP": [
+                                                    "Rep_Code_Messages",
+                                                    [
+                                                        5,
+                                                        9
+                                                    ]
+                                                ],
+                                                "IC": [
+                                                    "ICA_Messages",
+                                                    [
+                                                        5,
+                                                        8
+                                                    ]
+                                                ],
+                                                "SC": [
+                                                    "SCA_Messages",
+                                                    [
+                                                        5,
+                                                        8
+                                                    ]
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "skip_empty_line": true,
+                                    "allow_variable_length": true,
+                                    "header_delimiter": "|",
+                                    "header_record": "MESSAGE_IDENTIFIER|MESSAGE_TYPE|SUB_FIRM|MESSAGE_KEY",
+                                    "trailer_delimiter": "|"
+                                },
+                                "REPINFO_LOGO_SCA": {
+                                    "delimiter": "|",
+                                    "header_delimiter": "|",
+                                    "header_identifiers": [
+                                        "\"RepID\""
+                                    ],
+                                    "header_record": "\"RepID\"|\"MgrID\"|\"RepType\"|\"FirmID\"|\"FirstName\"|\"MiddleName\"|\"LastName\"|\"MailStreet1\"|\"MailStreet2\"|\"MailCity\"|\"MailState\"|\"MailZip\"|\"MailCountry\"|\"BusStreet1\"|\"BusStreet2\"|\"BusCity\"|\"BusState\"|\"BusZip\"|\"BusCountry\"|\"BusPhone\"|\"Extension\"|\"Email\"|\"WebAddr\"|\"MasterBankID\"|\"BankID\"|\"SubSubFirm\"|\"IsTerminated\"|\"LtrLogoFileName\"|\"StmntsLogoFileName\"|\"LogoSource\"",
+                                    "trailer_delimiter": "|",
+                                    "trailer_position": "2",
+                                    "trailer_identifiers": [
+                                        "REPINFO_LOGO"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmtest/dev/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "REPTITLE_SCA|STMNT_SUPPRESSION_SCA|MSG_ACCTS_SCA|REPINFO_LOGO_SCA",
+                            "key_location": {
+                                "REPTITLE_SCA": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                },
+                                "STMNT_SUPPRESSION_SCA": {
+                                    "key_index": "0|1|2|3",
+                                    "retention_days": "150",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                },
+                                "MSG_ACCTS_SCA": {
+                                    "key_index": "1|0|2",
+                                    "retention_days": "150",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                },
+                                "REPINFO_LOGO_SCA": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^(?:INSERT_LIST_SCA_|INSERT_FILE_SCA_)\\d{4}-\\d{2}-\\d{2}.DAT$",
+            "checkSum": false,
+            "fileType": "dat",
+            "StepFunction": [
+                {
+                    "name": "Validation step",
+                    "requiredCheckSum": false,
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_COPY_FILES",
+                    "sfStepsToDone": {
+                        "PositionalValidation": {
+                            "return_report_config": {
+                                "INSERT_LIST_SCA": {
+                                    "delimiter": " ",
+                                    "header_delimiter": "|",
+                                    "header_record": "ACCOUNT_NUMBER|INSERT_CODE",
+                                    "return_report_layout": {
+                                        "HEADER": "THIS REPORT VERIFIES THE RECEIPT OF A FILE AND CHECKS RECORD COUNT BUT DOES NOT VALIDATE THE DATA.",
+                                        "REPORT FOR THE PERIOD": "{REPORT_PERIOD}",
+                                        "FILE NAME": "{FILE_NAME}",
+                                        "ENVIRONMENT": "{STAGE}",
+                                        "STATUS": "{STATUS}",
+                                        "FILE RECEIVED DATE/TIME": "{DATETIME}",
+                                        "FILE LOAD DATE/TIME:": "{DATETIME}",
+                                        "LOADED RECORD COUNT": "{RECORD_COUNT}",
+                                        "HEADER ": "For any support or questions contact : InfocusWealthDCOE@broadridge.com"
+                                    }
+                                },
+                                "INSERT_FILE_SCA": {
+                                    "delimiter": {
+                                        "fixed_ranges": [
+                                            [
+                                                0,
+                                                8
+                                            ]
+                                        ]
+                                    },
+                                    "header_delimiter": "|",
+                                    "header_record": "ACCOUNT_NUMBER",
+                                    "return_report_layout": {
+                                        "HEADER": "THIS REPORT VERIFIES THE RECEIPT OF A FILE AND CHECKS RECORD COUNT BUT DOES NOT VALIDATE THE DATA.",
+                                        "REPORT FOR THE PERIOD": "{REPORT_PERIOD}",
+                                        "FILE NAME": "{FILE_NAME}",
+                                        "ENVIRONMENT": "{STAGE}",
+                                        "STATUS": "{STATUS}",
+                                        "FILE RECEIVED DATE/TIME": "{DATETIME}",
+                                        "FILE LOAD DATE/TIME:": "{DATETIME}",
+                                        "LOADED RECORD COUNT": "{RECORD_COUNT}",
+                                        "HEADER ": "For any support or questions contact : InfocusWealthDCOE@broadridge.com"
+                                    }
+                                }
+                            }
+                        },
+                        "ACKEmail": {
+                            "recipient_emails": [
+                                "prasad.dhulipala@broadridge.com"
+                            ],
+                            "cc_emails": [
+                                "vinay.kumaran@broadridge.com"
+                            ],
+                            "subject": "test subject text for the email",
+                            "body": "test body text for the email",
+                            "attachment_flag": false,
+                            "failureMailFlag": false,
+                            "object_key": "",
+                            "object_prefix": "",
+                            "pattern": "",
+                            "skip_email_send": false,
+                            "email_input_file": "",
+                            "email_input_format": "json",
+                            "email_output_format": "columnar",
+                            "email_output_delimiter": " : "
+                        }
+                    }
+                },
+                {
+                    "name": "Copy Files",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_COPY_FILES",
+                    "sfNextKey": "SM_ARN_MERGE_FILES",
+                    "sfStepsToDone": {
+                        "copyInfo": [
+                            {
+                                "source_folder": "lpl_sca/input/",
+                                "destination_folder": "lpl_sca/recon_insert/",
+                                "ext_type": "",
+                                "copy_type": "move",
+                                "file_reg": "input_file"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Merge Files",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_MERGE_FILES",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "mergeInsertInfo": [
+                            {
+                                "input_folder": "lpl_sca/recon_insert/",
+                                "output_file": "INSERT_SCA_<TS>.csv",
+                                "ts_format": "%Y-%m-%dT%H%M%S",
+                                "file_types": [
+                                    "INSERT_LIST_SCA_",
+                                    "INSERT_FILE_SCA_"
+                                ],
+                                "ext_type": "",
+                                "destination_folder": "lpl_sca/input/",
+                                "archive_folder": "lpl_sca/input/save/"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^(?:INSERT_SCA_)\\d{4}-\\d{2}-\\d{2}T\\d{6}\\.csv$",
+            "fileType": "csv",
+            "StepFunction": [
+                {
+                    "name": "CSV Load to Table",
+                    "order": "1",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "header": "true",
+                        "csvLoadStage": {
+                            "dbkey": "/dpmtest/dev/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "region": "us-east-1",
+                            "key_location": {
+                                "INSERT_SCA": {
+                                    "delimiter": ",",
+                                    "table_name": "INSERT_SCA",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX",
+                                    "mode": "recreate"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^(?:LOGO_MASTER_)\\d{4}-\\d{2}-\\d{2}\\.csv$",
+            "fileType": "csv",
+            "StepFunction": [
+                {
+                    "name": "Delimited Load Load to Staging table step",
+                    "order": "1",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "header": "true",
+                        "delimitedLoadStage": {
+                            "batch_size": "1000",
+                            "dbkey": "/dpmtest/dev/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "region": "us-east-1",
+                            "base_file_name": "LOGO_MASTER",
+                            "key_location": {
+                                "LOGO_MASTER": {
+                                    "delimiter": ",",
+                                    "retention_days": "150",
+                                    "table_name": "LOGO_MASTER",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^(?:MSG_LIST_SCA_)\\d{4}-\\d{2}-\\d{2}.DAT$",
+            "fileType": "DAT",
+            "StepFunction": [
+                {
+                    "name": "validation",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_NDMTOONPREM",
+                    "sfStepsToDone": {
+                        "RecType": {
+                            "present": true,
+                            "input_bucket": "br-icsdev-dpmdi-dataingress-us-east-1-s3 ",
+                            "input_file": "lpl_sca/input",
+                            "validation_value": "9999"
+                        }
+                    }
+                },
+                {
+                    "name": "ndmtoonprem",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_NDMTOONPREM",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "ndmjson": {
+                            "Type": "DAT",
+                            "ndmFilePatternOverride": "True",
+                            "inputPath": "lpl_sca/input/",
+                            "ndmFilePath": "lpl_sca/input/",
+                            "ndmFilePattern": ".*\\.DAT",
+                            "moveFlag": "True"
+                        }
+                    },
+                    "sfParams": {
+                        "job_name": "LPL_FT",
+                        "archive_uri": "lpl_sca/save",
+                        "to_internal_uri": "lpl_sca/to_internal/",
+                        "to_internal_json_uri": "lpl_sca/to_internal/json/",
+                        "onprem_system": "winfocus",
+                        "onprem_subsystem": "winfocusdocs",
+                        "onprem_folder": "input",
+                        "snode": {
+                            "dev": [
+                                "sterlingqa",
+                                "cdusr817",
+                                "dev"
+                            ],
+                            "qa": [
+                                "sterlingqa",
+                                "cdusr817",
+                                "qa"
+                            ],
+                            "uat": [
+                                "edhusiosu",
+                                "cdusr817",
+                                "uat"
+                            ],
+                            "prd": [
+                                "edhusiosp",
+                                "cdusr817",
+                                "prod"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "3",
+                    "endStep": "True",
+                    "initStep": "False",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "lpl_sca/save/"
+                }
+            ]
+        },
+        {
+            "filename": "(countrycode|currencycode|b1cardsection)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].csv",
+            "fileType": "csv",
+            "StepFunction": [
+                {
+                    "name": "Delimited Load Load to Staging table step",
+                    "order": "1",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "header": "true",
+                        "delimitedLoadStage": {
+                            "batch_size": "1000",
+                            "dbkey": "/dpmtest/dev/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "region": "us-east-1",
+                            "base_file_name": "countrycode|currencycode|b1cardsection",
+                            "key_location": {
+                                "countrycode": {
+                                    "delimiter": ",",
+                                    "retention_days": "150",
+                                    "table_name": "countrycode",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                },
+                                "currencycode": {
+                                    "delimiter": ",",
+                                    "retention_days": "150",
+                                    "table_name": "currencycode",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                },
+                                "b1cardsection": {
+                                    "delimiter": ",",
+                                    "retention_days": "150",
+                                    "table_name": "b1cardsection",
+                                    "database": "LPL-SCA",
+                                    "schema": "AUX"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "(?:CIT_TEST_)?LPLSCASTATEMENT_([0-9]{9})_([0-9]{7})_([A-Z0-9.]+)_[0-9_]+\\.txt_([0-9]{4})([0-1][0-9])([0-3][0-9])T([0-2][0-9])([0-5][0-9])([0-5][0-9])([0-9][0-9][0-9])\\.trigger",
+            "StepFunction": [
+                {
+                    "name": "brxextraction",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CDMEXTRACTION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "createbrxextractiondata": {
+                            "input_folder": "lpl_sca/input",
+                            "wipPath": "lpl_sca/wip",
+                            "kafka_url_parameter": "dpm-kafka-dev-url",
+                            "kafka_topic": "br.communication.lpl-sca.stmt.wif.extraction",
+                            "tableInfo": {
+                                "region": "us-east-1",
+                                "dbkey": "/dpmtest/dev/database-secret",
+                                "dbname": "LPL-SCA",
+                                "schema": "public",
+                                "summary_option": "{\"Income Summary\" : \"BalanceTable\", \"Asset Allocation\": \"BothTables\"}",
+                                "schema_set_query": "SET search_path TO",
+                                "function_call_query": "SELECT * FROM create_json_for_extraction(:identifier, :clientId, :origin, :summary_option)"
+                            },
+                            "fileNameFormat": {
+                                "clientName": "lpl-sca",
+                                "contactTypeMap": {
+                                    "AccountHolder": "single",
+                                    "HouseHoldMasterAccount": "master",
+                                    "HouseHoldSisterAccount": "sister",
+                                    "InterestedParty": "related"
+                                },
+                                "processType": {
+                                    "periodDateRange": [
+                                        {
+                                            "name": "END",
+                                            "fileName": "mon",
+                                            "topicName": "MONTH-END",
+                                            "daterange": "> 15"
+                                        },
+                                        {
+                                            "name": "MID",
+                                            "fileName": "mid",
+                                            "topicName": "MID-MONTH",
+                                            "daterange": "< 15"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "(TRUNCATE_SCHEMA_LPL_SCA)_[0-9]{4}_[0-1][0-9].trigger",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "truncate LPL-SCA schema",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_TRUNCATESCHEMA",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "truncateschema": {
+                            "data_base": "LPL-SCA",
+                            "schemas": "public",
+                            "exclude_tables": "bios_lpl_sca_out_recon, bios_lpl_sca_out_recon_data_account_list",
+                            "ssmdbkey": "/dpmtest/dev/database-secret"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "wfs/save/"
+                }
+            ]
+        }
+    ],
+    "sfn_info": {
+        "SM_ARN_CDMEXTRACTION": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-json_creation",
+        "SM_ARN_COPY_FILES": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-copy_files",
+        "SM_ARN_MERGE_FILES": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-merge_files",
+        "SM_ARN_MULTIFILE_REPORTING": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-multifile_reporting",
+        "SM_ARN_TRUNCATESCHEMA": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-truncate_schema"
+    },
+    "createdDateTime": "timestampinUTC",
+    "updatedDateTime": "timestampinUTC"
+}

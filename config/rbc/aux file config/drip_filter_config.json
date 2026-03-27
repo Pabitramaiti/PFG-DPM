@@ -1,0 +1,16 @@
+{
+  "key_filter": {
+    "AUX": [
+    ]
+  },
+  "record_config": {
+    "header_record_config": {
+      "function": "startsWith",
+      "value": "HDR"
+    },
+    "trailer_record_config": {
+      "function": "startsWith",
+      "value": "TRL"
+    }
+  }
+}

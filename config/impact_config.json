@@ -1,0 +1,203 @@
+{
+    "clientName": "impact",
+    "clientId": "000004",
+    "applicationName": "impact_stmts",
+    "clientProduct": [
+        "Statements"
+    ],
+    "runType": [
+        "test",
+        "prod"
+    ],
+    "fileType": {
+        "IMPACTSTATEMENT": "Statements"
+    },
+    "inputPath": "impact/input/",
+    "filesToProcess": [
+        {
+			"filename": "(|CIT_TEST_)(IMPACTSTATEMENT)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].txt",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "conversion",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "delimitedtojson": {
+                            "delimiter": "~",
+                            "config": {
+                                "IMPACTSTATEMENT": {
+                                    "system_flag": true, 
+									"meta_data_file": "impact/config/impact_config.json", 
+									"output_file_path": "impact/brx/brx_input/samples/load",
+									"header": "HEADER", 
+									"trailer": "TRAILER",
+									"main_field": "ACCOUNTS", 
+									"sub_field": "ACCOUNT"
+                                }
+                            }
+                        }
+                    }
+                },
+				{
+                    "name": "invokebrx",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_INVOKEBRX"
+                },
+				{
+                    "name": "advisorextraction",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_ADVISOREXTRACTION"
+                },
+				{
+                    "name": "accountextraction",
+                    "order": "4",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_ACCOUNTEXTRACTION"
+                },
+				{
+                    "name": "drivercreation",
+                    "order": "5",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_DRIVERCREATION"
+                },
+                {
+                    "name": "archival",
+                    "order": "6",
+                    "endStep": "True",
+                    "initStep": "False",
+                    "sfKey": "SM_ARN_MULTIFILE_ARCHIVAL",
+                    "archivalDestinationKey": "impact/save/"
+                }				
+            ]
+        },
+        {
+            "filename": "(|CIT_TEST_)(IMPACTSTATEMENT)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].trigger",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "advisorextraction",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_ADVISOREXTRACTION",
+                    "sfNextKey": "SM_ARN_ACCOUNTEXTRACTION",
+                    "sfStepsToDone": {
+                        "createadvisorlist": {
+                            "wipPath": "impact/wip",
+                            "outputFile": "advisors_list",
+                            "outputFileType": "json",
+                            "advisor": {
+                                "columns_list": "partyid_list, partyidentifiervalue_list",
+                                "advisor_limit": 1,
+                                "command": "SELECT  t1.partyid AS partyid_list, t3.partyidentifiervalue AS partyidentifiervalue_list FROM schema.partycommon t1 JOIN schema.partyclassification t2 ON t1.partyid = t2.partyid AND t2.partyclassificationvalue = 'Advisor' JOIN schema.partyidentifier t3 ON t1.partyid = t3.partyid AND t3.partyidentifiertype = 'OtherExternal'"
+                            },
+                            "columns": {
+                                "attributes": [{"name": "partyid", "type": "String", "primary_key": true}, {"name": "json_driver", "type": "String"}]
+                            },
+                            "tableInfo": {
+                                "tablePrint": "cdm_staging_table_print",
+                                "tablePresentment": "cdm_staging_table_presentment",
+                                "deliverytype": "P",		
+                                "region": "us-east-1",
+                                "dbkey": "/dpmtest/dev/impact/database-secret",
+                                "schema": "public"
+                            }                        
+                        }
+                    }
+                },
+                {
+                    "name": "accountextraction",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_ACCOUNTEXTRACTION",
+                    "sfNextKey":"SM_ARN_DRIVERCREATION",
+                    "sfStepsToDone": {
+                        "extractaccounts": {
+                            "bucket": "",
+                            "inputFile": "",
+                            "ishouseholdneeded": "N",
+                            "ismulticurrency": "N",
+                            "account": {
+                                "columns_list": "partyid, partyidentifiervalue",
+                                "command": "SELECT t1.partyid, t1.partyorigin AS party_origin, t1.partyisparent AS party_isparent, t1.partyparentid AS party_parentid, t1.partyparentreference AS party_parentreference, t2.partyclassificationtype AS partyclassification_type, t2.partyclassificationvalue AS partyclassification_value, t3.partyidentifiervalue AS partyidentifier_value, t3.partyidentifiertype AS partyidentifier_type, t4.partycontactfirstname AS partycontact_firstname, t4.partycontactlastname AS partycontact_lastname, t4.partycontacttype AS partycontact_type, t5.partycontactaddressline1 AS partycontact_addressline1, t5.partycontactaddressline2 AS partycontact_addressline2, t5.partycontactaddressline3 AS partycontact_addressline3, t5.partycontactaddressline4 AS partycontact_addressline4 FROM schema.partycommon t1 JOIN schema.partyclassification t2 ON t1.partyid = t2.partyid AND t2.partyclassificationvalue = 'Account' JOIN schema.partyidentifier t3 ON t1.partyid = t3.partyid AND t3.partyidentifiertype = 'OtherExternal' JOIN schema.partycontact t4 ON t1.partyid = t4.partyid JOIN schema.partycontactmailingaddress t5 ON t1.partyid = t5.partyid WHERE t1.partyparentid IN partyid_list"
+                            },
+                            "transaction": {
+                                "command": "WITH BaseData AS (SELECT t1.transactionpartyidentifiervalue AS partyid, t1.transactionid AS transactionid, MAX(t2.TransactionPrimaryAssetClass) AS sectionheader, MAX(t2.transactioncategory) AS transactioncategory, CASE WHEN COUNT(t4.transactionamounttype) > 0 THEN jsonb_object_agg(COALESCE(t4.transactionamounttype, ' ')::text, t4.transactionamountvalue) ELSE '{}'::jsonb END AS transactionamounts, MAX(t6.transactionpricevalue) AS transactionprice, MAX(t7.transactiondatetimevalue) AS transactiondate, CONCAT(NULLIF(STRING_AGG(DISTINCT t3.transactionnarrativevalue, '|'), '') || CASE WHEN MAX(t8.transactionidentifiervalue) IS NOT NULL THEN CASE WHEN STRING_AGG(DISTINCT t3.transactionnarrativevalue, '|') IS NOT NULL THEN '|' ELSE '' END || MAX(t8.transactionidentifiervalue) ELSE '' END || CASE WHEN STRING_AGG(DISTINCT t9.transactioninstrumentidentifiertype || ': ' || CAST(t9.transactioninstrumentidentifiervalue AS VARCHAR), '|') IS NOT NULL THEN CASE WHEN MAX(t8.transactionidentifiervalue) IS NOT NULL THEN '|' ELSE '' END || STRING_AGG(DISTINCT t9.transactioninstrumentidentifiertype || ': ' || CAST(t9.transactioninstrumentidentifiervalue AS VARCHAR), '|') ELSE '' END) AS description FROM schema.transactionparty t1 LEFT JOIN schema.transactionevent t2 ON t1.transactionid = t2.transactionid LEFT JOIN schema.transactionprice t6 ON t1.transactionid = t6.transactionid AND t6.transactionpricetype IN ('ClosingPrice') LEFT JOIN schema.transactiondate t7 ON t1.transactionid = t7.transactionid AND t7.transactiondatetype IN ('ClearingDate') LEFT JOIN schema.transactionidentifier t8 ON t1.transactionid = t8.transactionid AND t8.transactionidentifiertype IN ('ExternalReference') LEFT JOIN schema.transactioninstrument t9 ON t1.transactionid = t9.transactionid AND t9.transactioninstrumentrole IN ('PrimaryInstrument') LEFT JOIN schema.transactionamount t4 ON t1.transactionid = t4.transactionid AND t4.transactionamounttype IN ('OpeningBalance','ClosingBalance','LongMarketValue','ShortMarketValue', 'TotalCredit', 'TotalDebit') LEFT JOIN schema.transactionnarrative t3 ON t1.transactionid = t3.transactionid AND t3.transactionnarrativetype IN ('MultiLineDescription') WHERE t1.transactionpartyidentifiervalue IN partyid GROUP BY t1.transactionpartyidentifiervalue, t1.transactionid), CurrencyData AS (SELECT t1.transactionid, STRING_AGG(DISTINCT t4.transactionamountcurrency, '|') AS transactionamountcurrency FROM schema.transactionamount t4 LEFT JOIN schema.transactionparty t1 ON t4.transactionid = t1.transactionid WHERE t4.transactionamounttype IN ('OpeningBalance', 'ClosingBalance', 'LongMarketValue', 'ShortMarketValue', 'TotalCredit', 'TotalDebit') GROUP BY t1.transactionid) SELECT bd.partyid, bd.transactionid, bd.sectionheader, COALESCE(cd.transactionamountcurrency, '') as transactionamountcurrency, bd.transactiondate, bd.description, bd.transactioncategory, bd.transactionprice, bd.transactionamounts FROM BaseData bd LEFT JOIN CurrencyData cd ON bd.transactionid = cd.transactionid"
+                            },
+                            "formats": {
+                                "date": "%m/%d",
+                                "currency": "$%.2f",
+                                "decimal": "%.3f"
+                            },                            
+                            "driverlayout":[
+                                {
+                                    "STMT_RECORD": {"STMT_REC_TYPE": "", "STMT_REC_SEQUENCE": "", "STMT_CLIENT_NUMBER": "", "STMT_CLIENT_NAME": "", "STMT_STMT_APPLICATION": "", "STMT_PARENT_ID": "", "STMT_STMT_ID": "", "STMT_ACCOUNT_NUMBER": "", "STMT_BRANCH_NUMBER": "", "STMT_SALUTATION": "", "STMT_FIRST_NAME": "", "STMT_MIDDLE_NAME": "", "STMT_LAST_NAME": "", "STMT_ADDRESS_LINE_1": "", "STMT_ADDRESS_LINE_2": "", "STMT_ADDRESS_LINE_3": "", "STMT_ADDRESS_LINE_4": "", "STMT_ADDRESS_LINE_5": "", "STMT_ADDRESS_LINE_6": "", "STMT_ADDRESS_LINE_7": "", "STMT_ADDRESS_LINE_8": "", "STMT_CITY": "", "STMT_STATE": "", "STMT_COUNTRY_NAME": "", "STMT_ZIPCODE": "", "STMT_ZIP_4": "", "STMT_ZIP_DELIVERY_CODE": "", "STMT_ZIP_CHECK_DIGIT": "", "STMT_FRGN_IND": "", "STMT_REP_NAME": "", "STMT_REP_ID": "", "STMT_REP_ADRESS_LINE_1": "", "STMT_REP_ADRESS_LINE_2": "", "STMT_REP_ADRESS_LINE_3": "", "STMT_REP_EMAIL": "", "STMT_REP_PHONE": "", "STMT_RETURN_ADDRESS_LINE_1": "", "STMT_RETURN_ADDRESS_LINE_2": "", "STMT_RETURN_ADDRESS_LINE_3": "", "STMT_RETURN_ADDRESS_LINE_4": "", "STMT_RETURN_ADDRESS_LINE_5": "", "STMT_RETURN_ADDRESS_LINE_6": "", "STMT_DATE_FROM": "", "STMT_DATE_TO": "", "STMT_DATE3": "", "STMT_FONT_CHOICE": "", "STMT_USER_TEXT_VARIABLE_01": "", "STMT_USER_TEXT_VARIABLE_02": "", "STMT_USER_TEXT_VARIABLE_03": "", "STMT_USER_TEXT_VARIABLE_04": "", "STMT_USER_TEXT_VARIABLE_05": "", "STMT_USER_TEXT_VARIABLE_06": "", "STMT_USER_TEXT_VARIABLE_07": "", "STMT_USER_TEXT_VARIABLE_08": "", "STMT_USER_TEXT_VARIABLE_09": "", "STMT_USER_TEXT_VARIABLE_10": "", "STMT_USER_TEXT_VARIABLE_11": "", "STMT_USER_TEXT_VARIABLE_12": "", "STMT_USER_TEXT_VARIABLE_13": "", "STMT_USER_TEXT_VARIABLE_14": "", "STMT_USER_TEXT_VARIABLE_15": "", "STMT_USER_TEXT_VARIABLE_16": "", "STMT_USER_TEXT_VARIABLE_17": "", "STMT_USER_TEXT_VARIABLE_18": "", "STMT_USER_TEXT_VARIABLE_19": "", "STMT_USER_TEXT_VARIABLE_20": "", "STMT_USER_TEXT_VARIABLE_21": "", "STMT_USER_TEXT_VARIABLE_22": "", "STMT_USER_TEXT_VARIABLE_23": "", "STMT_USER_TEXT_VARIABLE_24": "", "STMT_USER_TEXT_VARIABLE_25": "", "STMT_USER_TEXT_VARIABLE_26": "", "STMT_USER_TEXT_VARIABLE_27": "", "STMT_USER_TEXT_VARIABLE_28": "", "STMT_USER_TEXT_VARIABLE_29": "", "STMT_USER_TEXT_VARIABLE_30": "", "STMT_SPECIAL_HANDLING": "", "STMT_INSERT_1": "", "STMT_INSERT_2": "", "STMT_INSERT_3": "", "STMT_INSERT_4": "", "STMT_INSERT_5": "", "STMT_INSERT_6": "", "STMT_SAMPLE_INDICATOR": "", "STMT_TOP_LOGO_1_NAME": "", "STMT_TOP_LOGO_2_NAME": "", "STMT_TOP_LOGO_3_NAME": "", "STMT_BACKER_LOGO_NAME": "", "STMT_HH_INDICATOR": "", "STMT_MASKED_ACCOUNT_NUM": "", "STMT_LOGO_COLOR_INDICATOR": "", "DTL": []},
+                                    "DTL_RECORD": {"DTL_REC_TYPE": "", "DTL_REC_SEQUENCE": "", "DTL_CLIENT_NUMBER": "", "DTL_CLIENT_NAME": "", "DTL_TEXT_1": "", "DTL_TEXT_2": "", "Heading1": "", "Heading2": "", "DTL_SECTION_AND_SUBSECTION_NAME": "", "DTL_Row_Indicator": "", "DTL_COLUMN_1_HEADER_1_TXT": "", "DTL_COLUMN_1_HEADER_2_TXT": "", "DTL_COLUMN_2_HEADER_1_TXT": "", "DTL_COLUMN_2_HEADER_2_TXT": "", "DTL_COLUMN_3_HEADER_1_TXT": "", "DTL_COLUMN_3_HEADER_2_TXT": "", "DTL_COLUMN_4_HEADER_1_TXT": "", "DTL_COLUMN_4_HEADER_2_TXT": "", "DTL_COLUMN_5_HEADER_1_TXT": "", "DTL_COLUMN_5_HEADER_2_TXT": "", "DTL_COLUMN_6_HEADER_1_TXT": "", "DTL_COLUMN_6_HEADER_2_TXT": "", "DTL_COLUMN_7_HEADER_1_TXT": "", "DTL_COLUMN_7_HEADER_2_TXT": "", "DTL_COLUMN_VALUES": {"ROW": []}},
+                                    "CATEGORY_RECORDS": {"detail_table_type_1": [], "detail_table_type_2": [], "detail_table_type_3": []},
+									"TRANSACTIONS_DTL_RECORD": {"TradeActivities": {"Heading": "Trades, Clearance and Adjustment Activities","OpeningBalance":[["OPENING BALANCE","COLUMN_2_ROW_1","","",""],["Amount","COLUMN_7_ROW_1","transactionamounts.OpeningBalance","currency",""]], "Detail": [["Clear Date","COLUMN_1_ROW_1","transactiondate","date",""],["Description","COLUMN_2_ROW_1","description","",""],["Price or Explanation","COLUMN_3_ROW_1","transactionprice","decimal",""],["Bought/Received Long","COLUMN_4_ROW_1","transactionamounts.LongMarketValue","currency",""],["Sold/Delivered Short","COLUMN_5_ROW_1","transactionamounts.ShortMarketValue","currency",""],["Debit Amount","COLUMN_6_ROW_1","transactionamounts.TotalDebit","currency",""],["Credit Amount","COLUMN_7_ROW_1","transactionamounts.TotalCredit","currency",""]] ,"ClosingBalance":[["CLOSING BALANCE","COLUMN_2_ROW_1","","",""],["Amount","COLUMN_7_ROW_1","transactionamounts.ClosingBalance","currency",""]]}, "CustomerPositions": {"Heading": "Customer Positions","Detail": [["Clear Date","COLUMN_1_ROW_1","transactiondate","date",""],["Description","COLUMN_2_ROW_1","description","",""],["Price or Explanation","COLUMN_3_ROW_1","transactionprice","decimal",""],["Bought/Received Long","COLUMN_4_ROW_1","transactionamounts.LongMarketValue","currency",""],["Sold/Delivered Short","COLUMN_5_ROW_1","transactionamounts.ShortMarketValue","currency",""],["Debit Amount","COLUMN_6_ROW_1","transactionamounts.TotalDebit","currency",""],["Credit Amount","COLUMN_7_ROW_1","transactionamounts.TotalCredit","currency",""]]}, "OptionsPositions": {"Heading": "OTC Options Positions","Detail": [["Clear Date","COLUMN_1_ROW_1","transactiondate","date",""],["Description","COLUMN_2_ROW_1","description","",""],["Price or Explanation","COLUMN_3_ROW_1","transactionprice","decimal",""],["Bought/Received Long","COLUMN_4_ROW_1","transactionamounts.LongMarketValue","currency",""],["Sold/Delivered Short","COLUMN_5_ROW_1","transactionamounts.ShortMarketValue","currency",""],["Debit Amount","COLUMN_6_ROW_1","transactionamounts.TotalDebit","currency",""],["Credit Amount","COLUMN_7_ROW_1","transactionamounts.TotalCredit","currency",""]]},"SupplementalTradeActivity": {"Heading": "Supplemental Trade Activity","Detail": [["Clear Date","COLUMN_1_ROW_1","transactiondate","date",""],["Description","COLUMN_2_ROW_1","description","",""],["Price or Explanation","COLUMN_3_ROW_1","transactionprice","decimal",""],["Bought/Received Long","COLUMN_4_ROW_1","transactionamounts.LongMarketValue","currency",""],["Sold/Delivered Short","COLUMN_5_ROW_1","transactionamounts.ShortMarketValue","currency",""],["Debit Amount","COLUMN_6_ROW_1","transactionamounts.TotalDebit","currency",""],["Credit Amount","COLUMN_7_ROW_1","transactionamounts.TotalCredit","currency",""]]}, "TransactionsSettledButNotYetCleared": {"Heading": "Transactions Settled But Not Yet Cleared","Detail": [["Clear Date","COLUMN_1_ROW_1","transactiondate","date",""],["Description","COLUMN_2_ROW_1","description","",""],["Price or Explanation","COLUMN_3_ROW_1","transactionprice","decimal",""],["Bought/Received Long","COLUMN_4_ROW_1","transactionamounts.LongMarketValue","currency",""],["Sold/Delivered Short","COLUMN_5_ROW_1","transactionamounts.ShortMarketValue","currency",""],["Debit Amount","COLUMN_6_ROW_1","transactionamounts.TotalDebit","currency",""],["Credit Amount","COLUMN_7_ROW_1","transactionamounts.TotalCredit","currency",""]]}}
+                                }
+                            ],
+                            "tableInfo": {
+                                "tablePrint": "cdm_staging_table_print",
+                                "tablePresentment": "cdm_staging_table_presentment",
+                                "deliverytype": "P",		
+                                "region": "us-east-1",
+                                "dbkey": "/dpmtest/dev/impact/database-secret",
+                                "schema": "public"
+                            }                        
+                        }
+                    }
+                },
+                {
+                    "name":"drivercreation",
+                    "order":"3",
+                    "initStep":"False",
+                    "endStep":"False",
+                    "sfKey":"SM_ARN_DRIVERCREATION",
+					"sfNextKey":"SM_ARN_MULTIFILE_ARCHIVAL",
+                    "sfStepsToDone":{
+                        "drivercreation":{
+                            "printDriverExtractionQuery": "SELECT * from schema.tablePrint",
+                            "presentmentDriverExtractionQuery": "SELECT * from schema.tablePresentment",
+                            "extraction": {
+                                "columns": "*"
+                            },
+                            "tableInfo": {
+                                "tablePrint": "cdm_staging_table_print",
+                                "tablePresentment": "cdm_staging_table_presentment",
+                                "deliverytype": "P",		
+                                "region": "us-east-1",
+                                "dbkey": "/dpmtest/dev/impact/database-secret",
+                                "schema": "public"
+                            },
+                            "fileName":"",
+                            "object_key":""
+                        }
+                    }
+                },
+				{
+                    "name": "archival",
+                    "order": "4",
+                    "endStep": "True",
+                    "initStep": "False",
+                    "sfKey": "SM_ARN_MULTIFILE_ARCHIVAL",
+                    "archivalDestinationKey": "impact/save/"
+                }	
+            ]
+        }				
+    ],
+    "createdDateTime": "timestampinUTC",
+    "updatedDateTime": "timestampinUTC",
+    "isActive": "true"
+}

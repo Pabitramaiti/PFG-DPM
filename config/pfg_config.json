@@ -1,0 +1,1037 @@
+{
+  "clientName": "PFG",
+  "clientId": "000001",
+  "applicationName": "PDF2PRINT",
+  "teamsId": "ac0a965e.Broadridge.onmicrosoft.com@amer.teams.ms",
+  "runType": [
+    "test",
+    "prod"
+  ],
+  "fileType": {},
+  "destinationType": {
+    "8RISEPOD": "marcomm",
+    "A4567890S": "marcomm",
+    "ANN00010": "onprem",
+    "ANN00030": "onprem",
+    "ANN00050": "onprem",
+    "ANN00060": "onprem",
+    "ANN00080": "onprem",
+    "ANN00090": "onprem",
+    "ANN00100": "onprem",
+    "ANN00120": "onprem",
+    "ANN00130": "onprem",
+    "ANN00140": "onprem",
+    "ANN00150": "onprem",
+    "ANN00160": "onprem",
+    "ANN00170": "onprem",
+    "ANN00180": "onprem",
+    "ANN00190": "onprem",
+    "ANN00200": "onprem",
+    "ANN00210": "onprem",
+    "ANN00220": "marcomm",
+    "BNK01982": "onprem",
+    "BNK04197": "onprem",
+    "CGS34290": "onprem",
+    "CGS38920": "onprem",
+    "CGS42760": "onprem",
+    "CGS42966": "onprem",
+    "CGS61660": "onprem",
+    "CGS61670": "onprem",
+    "CGS61680": "onprem",
+    "CGS61690": "onprem",
+    "CGS70340": "onprem",
+    "CGS70350": "onprem",
+    "CGS70370": "onprem",
+    "CGS71230": "onprem",
+    "CGS71260": "onprem",
+    "CGS71270": "onprem",
+    "CGS71280": "onprem",
+    "CGS71290": "onprem",
+    "CGS71520": "onprem",
+    "CGS71530": "onprem",
+    "CGS7153L": "onprem",
+    "CGS71680": "onprem",
+    "CGS71810": "marcomm",
+    "CGS71870": "onprem",
+    "CGS71890": "onprem",
+    "CGS72010": "onprem",
+    "CGS72050": "onprem",
+    "CGS72110": "onprem",
+    "CGS72130": "onprem",
+    "CGS72150": "onprem",
+    "CGS72190": "onprem",
+    "CGS72200": "onprem",
+    "CGS72230": "onprem",
+    "CGS72270": "onprem",
+    "CGS72280": "onprem",
+    "CGS72300": "onprem",
+    "CGS72510": "onprem",
+    "CGS72580": "onprem",
+    "CGS72590": "onprem",
+    "CGS7262": "onprem",
+    "CGS72620": "onprem",
+    "CGS72630": "onprem",
+    "CGS72660": "onprem",
+    "CGS72740": "onprem",
+    "CGS72860": "onprem",
+    "CGS73000": "onprem",
+    "CGS73040": "onprem",
+    "CGS73050": "onprem",
+    "CGS73060": "onprem",
+    "CGS85470": "onprem",
+    "CHKHIVOL": "onprem",
+    "CHKSREDR": "onprem",
+    "CHKSONLY": "onprem",
+    "CHKSTMT0": "onprem",
+    "D-CGS72110": "onprem",
+    "D-CGS85470": "onprem",
+    "D-OTH65310": "onprem",
+    "DMG00020": "marcomm",
+    "GJ632610": "onprem",
+    "GJ81909T": "onprem",
+    "IPN80000": "onprem",
+    "IPN8000F": "onprem",
+    "IPN8000L": "onprem",
+    "IPN8000M": "marcomm",
+    "IPN80050": "onprem",
+    "MJ747180": "onprem",
+    "MJ747190": "onprem",
+    "MJ9162A0": "onprem",
+    "MJ9162B0": "onprem",
+    "MJ9162B3": "onprem",
+    "MJ9162B5": "onprem",
+    "MJ9162F0": "onprem",
+    "MJ9162G0": "onprem",
+    "MJ9162I0": "onprem",
+    "MJ9162J5": "onprem",
+    "MJ9162N0": "onprem",
+    "MJ9162Q0": "onprem",
+    "MJ9162R0": "onprem",
+    "MJ9162S0": "onprem",
+    "MJ9163G0": "onprem",
+    "OTH54630": "onprem",
+    "OTH65500": "marcomm",
+    "OTH6550A": "marcomm",
+    "OTH6550B": "marcomm",
+    "OTH6550F": "marcomm",
+    "OTH6550L": "marcomm",
+    "OTH6550P": "marcomm",
+    "OTH6550X": "marcomm",
+    "OTH65520": "onprem",
+    "OTH65300": "onprem",
+    "OTH65310": "onprem",
+    "OTH65330": "onprem",
+    "OTH65490": "onprem",
+    "PJ244030": "onprem",
+    "PJ24403P": "onprem",
+    "PRI02090": "onprem",
+    "PRI20000": "onprem",
+    "PSI00010": "onprem",
+    "RISEPOD80": "marcomm",
+    "RNQ00010": "onprem",
+    "TPSCHK01": "onprem",
+    "regex": {
+       "^A.*L$": "onprem",
+       "^A.*S$": "onprem",
+       "^A.*U$": "onprem",
+       "^A.*I$": "onprem",
+       "^M.*I$": "marcomm",
+       "^M.*L$": "marcomm",
+       "^M.*S$": "marcomm",
+       "^M.*U$": "marcomm"
+    },
+    "default": "onprem"
+  },
+  "corps": {},
+  "marcommSLA": {
+    "8RISEPOD" : "1",
+    "A4567890S": "3",
+    "ANN00220" : "1",
+    "CGS71810" : "1",
+    "DMG00020" : "1",
+    "IPN8000M" : "3",
+    "OTH65500" : "1",
+    "OTH6550A" : "1",
+    "OTH6550B" : "1",
+    "OTH6550F" : "1",
+    "OTH6550L" : "1",
+    "OTH6550P" : "1",
+    "OTH6550X" : "1",
+    "RISEPOD80": "2",
+    "default"  : "3"
+  },
+  "cronConfig": {
+    "timeIntervalInHours": "200",
+    "intervals": {
+      "hours": [],
+      "minutes": [
+        "0",
+        "1",
+        "30",
+        "31"
+      ],
+      "seconds": []
+    },
+    "triggerDetails": [
+      {
+        "client": "PFG",
+        "product": "8RISEPOD"
+      },
+      {
+        "client": "PFG",
+        "product": "A4567890S"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00010"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00030"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00050",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00060"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00080"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00090"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00100"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00120"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00130"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00140",
+        "corp_mapping": {
+          "default": "F9626"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00150",
+        "corp_mapping": {
+          "default": "F9626"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00160"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00170"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00180"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00190"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00200"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00210"
+      },
+      {
+        "client": "PFG",
+        "product": "ANN00220"
+      },
+      {
+        "client": "PFG",
+        "product": "BNK01982"
+      },
+      {
+        "client": "PFG",
+        "product": "BNK04197"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS34290"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS38920"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS42760"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS42966"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS61660"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS61670"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS61680"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS61690",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS70340"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS70350"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS70370"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71230"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71260"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71270",
+        "category": "bulk_loose_envelopes",
+        "bulk_code": "e",
+        "corp_mapping": {
+          "default": "F6940"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71280",
+        "category": "bulk_loose_envelopes",
+        "bulk_code": "e"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71290",
+        "category": "bulk_loose_envelopes",
+        "bulk_code": "e",
+        "corp_mapping": {
+          "default": "F6940"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71520",
+        "category": "bulk_loose_envelopes",
+        "bulk_code": "e"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71530"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS7153L",
+        "category": "bulk_certified_envelopes",
+        "bulk_code": "c"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71680"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71810"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71870"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS71890",
+        "corp_mapping": {
+          "default": "D7056"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72010"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72050"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72110"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72130"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72150"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72190"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72200"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72230"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72270",
+        "corp_mapping": {
+          "default": "D7056"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72280",
+        "corp_mapping": {
+          "default": "D7056"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72300"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72510"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72580"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72590"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS7262"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72620"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72630",
+        "category": "bulk_loose_envelopes",
+        "bulk_code": "e"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72660"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72740"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS72860",
+        "corp_mapping": {
+          "default": "F8557"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS73000"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS73040"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS73050",
+        "corp_mapping": {
+          "default": "F8557"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CGS73060"
+      },
+      {
+        "client": "PFG",
+        "product": "CGS85470"
+      },
+      {
+        "client": "PFG",
+        "product": "CHKHIVOL",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b",
+        "corp_mapping": {
+          "n": "CHKHIVOL",
+          "c": "F9351",
+          "b": "F9421"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CHKSREDR",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b",
+        "corp_mapping": {
+          "n": "CHKSREDR",
+          "c": "F9309",
+          "b": "F9379"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CHKSONLY",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b",
+        "corp_mapping": {
+          "n": "CHKSONLY",
+          "c": "F9323",
+          "b": "F9393"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "CHKSTMT0",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b",
+        "corp_mapping": {
+          "n": "CHKSTMT0",
+          "c": "F9337",
+          "b": "F9407"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "D-CGS72110",
+        "corp_mapping": {
+          "default": "CGS72110"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "D-CGS85470",
+        "corp_mapping": {
+          "default": "CGS85470"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "D-OTH65310",
+        "category": "bulk_certified_envelopes",
+        "bulk_code": "c",
+        "corp_mapping": {
+          "default": "OTH65310"
+        }
+      },
+      {
+        "client": "PFG",
+        "product": "DMG00020"
+      },
+      {
+        "client": "PFG",
+        "product": "GJ632610"
+      },
+      {
+        "client": "PFG",
+        "product": "GJ81909T"
+      },
+      {
+        "client": "PFG",
+        "product": "IPN80000",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b"
+      },
+      {
+        "client": "PFG",
+        "product": "IPN8000F",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b"
+      },
+      {
+        "client": "PFG",
+        "product": "IPN8000L",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b"
+      },
+      {
+        "client": "PFG",
+        "product": "IPN8000M"
+      },
+      {
+        "client": "PFG",
+        "product": "IPN80050"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ747180"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ747190",
+        "category": "bulk_certified_envelopes",
+        "bulk_code": "c"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162A0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162B0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162B3"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162B5"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162F0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162G0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162I0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162J5"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162N0",
+        "category": "bulk_certified_envelopes",
+        "bulk_code": "c"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162Q0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162R0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9162S0"
+      },
+      {
+        "client": "PFG",
+        "product": "MJ9163G0"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH54630"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH65500"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH6550A"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH6550B"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH6550F"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH6550L"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH6550P"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH6550X"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH65520"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH65300"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH65310",
+        "category": "bulk_certified_envelopes",
+        "bulk_code": "c"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH65330"
+      },
+      {
+        "client": "PFG",
+        "product": "OTH65490"
+      },
+      {
+        "client": "PFG",
+        "product": "PJ244030"
+      },
+      {
+        "client": "PFG",
+        "product": "PJ24403P"
+      },
+      {
+        "client": "PFG",
+        "product": "PRI02090"
+      },
+      {
+        "client": "PFG",
+        "product": "PRI20000"
+      },
+      {
+        "client": "PFG",
+        "product": "PSI00010"
+      },
+      {
+        "client": "PFG",
+        "product": "RISEPOD80"
+      },
+      {
+        "client": "PFG",
+        "product": "RNQ00010"
+      },
+      {
+        "client": "PFG",
+        "product": "TPSCHK01",
+        "category": "bulk_sealed_unsealed_envelopes",
+        "bulk_code": "b",
+        "corp_mapping": {
+          "n": "TPSCHK01",
+          "c": "F9365",
+          "b": "F9435"
+        }
+      }
+    ]
+  },
+  "inputPath": "PFG/input/",
+  "cronTriggerFileName": "PFG_ORDER_PROCESSING_<TIMESTAMP>.trig",
+  "filesToProcess": [
+    {
+      "filename": "^PFG_ORDER_PROCESSING_(\\d{17})\\.trig$",
+      "StepFunction": [
+        {
+          "name": "ordergrouping",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_ORDER_GROUPING",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "orderGroupingFunction": {
+              "outputPath": "PFG/input/",
+              "dbName": "Orders",
+              "max_orderids" : "20000",
+              "ssmDBKey": "/dpmuev1/uat/database-secret"
+            }
+          }
+        },
+        {
+          "name": "docaggregation",
+          "order": "2",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_DOCUMENT_AGGREGATION"
+        },
+        {
+          "name": "compression",
+          "order": "3",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_COMPRESSION"
+        },
+        {
+          "name": "ndmtoonprem",
+          "order": "4",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_NDMTOONPREM"
+        },
+        {
+          "name": "orderstatus",
+          "order": "5",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_INVOKE_ORDER_STATUS",
+          "ssmDBKey": "/dpmuev1/uat/database-secret"
+        },
+        {
+          "name": "archival",
+          "order": "6",
+          "endStep": "True",
+          "initStep": "False",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "PFG/save/"
+        }
+      ]
+    },
+    {
+      "filename": "^PFG_(.*)\\.(.*)(?:\\.\\d+)?_RETRIEVE_AND_ZIP_(\\d{17})\\.(\\d+)\\.trig$",
+      "StepFunction": [
+        {
+          "name": "docaggregation",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_DOCUMENT_AGGREGATION",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "globalSecondaryIndex": "br-ics_uat-dpmdi_generic_global_sec_index",
+          "secondaryIndexKey": "secondaryIndexKey",
+          "sfStepsToDone": {
+            "sendRetrieveMessage": {
+              "ssmDBKey": "/dpmuev1/uat/database-secret",
+              "dbName": "Orders",
+              "KAFKA_API_URL": "https://appuev1.us-east-1.dpm.uat.prd.bfsaws.net/producer/api/publish/br.communication.document.retrieve.0"
+            },
+            "moveCompletedOrderDocuments": {
+              "outputDir": "PFG/wip/",
+              "dbname": "Orders",
+              "dbschema": "public",
+              "ssmDBKey": "/dpmuev1/uat/database-secret",
+              "timeoutSeconds": 7200
+            },
+            "brxTrigger": {
+              "triggerFileName": "orders_mapping_trigger.csv",
+              "destinationKey": "PFG/brx/brx_wip",
+              "onpremOutputFileName": "onpremoutputfile.json",
+              "marcommOutputFileName": "instructions.xml",
+              "brxOutputPath": "PFG/wip/"
+            }
+          }
+        },
+        {
+          "name": "compression",
+          "order": "2",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_COMPRESSION"
+        },
+        {
+          "name": "ndmtoonprem",
+          "order": "3",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_NDMTOONPREM"
+        },
+        {
+          "name": "orderstatus",
+          "order": "4",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_INVOKE_ORDER_STATUS",
+          "ssmDBKey": "/dpmuev1/uat/database-secret"
+        },
+        {
+          "name": "archival",
+          "order": "5",
+          "endStep": "True",
+          "initStep": "False",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "PFG/save/"
+        }
+      ]
+    },
+    {
+      "filename": "^PFG_(.*)_RETRIEVE_AND_ZIP_(\\d{17})\\.(\\d+)\\.trig\\.(onprem)\\.(.*)\\.brxout$",
+      "StepFunction": [
+        {
+          "name": "compression",
+          "order": "1",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_COMPRESSION",
+          "sfNextKey": "SM_ARN_NDMTOONPREM",
+          "globalSecondaryIndex": "br-ics_uat-dpmdi_generic_global_sec_index",
+          "secondaryIndexKey": "secondaryIndexKey",
+          "sfStepsToDone": {
+            "tarCreation": {
+              "filePathList": [
+                "PFG/wip/",
+                "PFG/wip/"
+              ],
+              "filePatternList": [
+                ".*\\.pdf",
+                ".*\\.json"
+              ],
+              "tarDestinationPath": "PFG/output/to_internal/onprem/",
+              "tarDestinationPrefix": "PLACEHOLDER",
+              "tarFileName": "onpremoutput",
+              "tarType": "NORMAL_TAR"
+            }
+          }
+        },
+        {
+          "name": "ndmtoonprem",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_NDMTOONPREM",
+          "sfNextKey": "SM_ARN_INVOKE_ORDER_STATUS",
+          "sfStepsToDone": {
+            "ndmjson": {
+              "Type": "tar",
+              "ndmFilePatternOverride": "True",
+              "inputPath": "PFG/input/",
+              "ndmFilePath": "PFG/output/to_internal/onprem/",
+              "ndmFilePattern": ".*\\.tgz",
+              "moveFlag": "True"
+            }
+          },
+          "sfParams": {
+            "job_name": "PFG_FT",
+            "archive_uri": "PFG/to_internal/save",
+            "to_internal_uri": "PFG/to_internal/",
+            "to_internal_json_uri": "PFG/to_internal/json/",
+            "onprem_system": "pfg",
+            "onprem_subsystem": "pdf2print",
+            "onprem_folder": "input",
+            "snode": {
+              "dev": [
+                "sterlingqa",
+                "cdusr848",
+                "dev"
+              ],
+              "qa": [
+                "sterlingqa",
+                "cdusr848",
+                "qa"
+              ],
+              "uat": [
+                "edhusiosu",
+                "cdusr848",
+                "uat"
+              ],
+              "prd": [
+                "edhusiosp",
+                "cdusr848",
+                "prod"
+              ]
+            }
+          }
+        },
+        {
+          "name": "orderstatus",
+          "order": "3",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_INVOKE_ORDER_STATUS",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "ssmDBKey": "/dpmuev1/uat/database-secret"
+        },
+        {
+          "name": "archival",
+          "order": "4",
+          "endStep": "True",
+          "initStep": "False",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "PFG/save/"
+        }
+      ]
+    },
+    {
+      "filename": "^PFG_(.*)_RETRIEVE_AND_ZIP_(\\d{17})\\.(\\d+)\\.trig\\.(marcomm)\\.(.*)\\.brxout$",
+      "StepFunction": [
+        {
+          "name": "compression",
+          "order": "1",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_COMPRESSION",
+          "sfNextKey": "SM_ARN_INVOKE_ORDER_STATUS",
+          "globalSecondaryIndex": "br-ics_uat-dpmdi_generic_global_sec_index",
+          "secondaryIndexKey": "secondaryIndexKey",
+          "sfStepsToDone": {
+            "zipFileCreation": {
+              "filePathList": [
+                "PFG/wip/",
+                "PFG/wip/"
+              ],
+              "filePatternList": [
+                ".*\\.pdf",
+                ".*\\.xml"
+              ],
+              "zipDestination": "PFG/output/to_internal/marcomm/",
+              "zipFileName": "marcommoutput",
+              "zipType": "NORMAL_ZIP"
+            }
+          }
+        },
+        {
+          "name": "orderstatus",
+          "order": "2",
+          "endStep": "False",
+          "initStep": "False",
+          "sfKey": "SM_ARN_INVOKE_ORDER_STATUS",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "ssmDBKey": "/dpmuev1/uat/database-secret"
+        },
+        {
+          "name": "archival",
+          "order": "3",
+          "endStep": "True",
+          "initStep": "False",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "PFG/save/"
+        }
+      ]
+    }
+  ],
+  "createdDateTime": "timestampinUTC",
+  "updatedDateTime": "timestampinUTC"
+}

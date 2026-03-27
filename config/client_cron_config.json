@@ -1,0 +1,110 @@
+{
+  "clients": {
+    "PFG": {
+      "db_name": "Orders",
+      "table_name": "order_table",
+      "status": "COMPLETED",
+      "timestamp_format": "%m%d%Y%H%M%S%f",
+      "timestamp_length": 17,
+      "max_jobs": 50,
+      "days_of_week": ["ALL"],
+      "s3_dest": "PFG/input",
+      "trig_file_template": "PFG_ORDER_PROCESSING_<TIMESTAMP>.trig",
+
+      "schedules": [
+        {
+          "time": ["00:00", "02:00", "06:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"],
+          "timezone": "America/New_York",
+          "groups": [
+            {
+              "name": "primary_jobs",
+              "job_list": ["CGS71810", "ANN00220", "IPN8000M", "8RISEPOD", "DMG00020", "OTH65500", "OTH6550A", "OTH6550B", "OTH6550F", "OTH6550L", "OTH6550P", "OTH6550X"]
+            },
+            {
+              "name": "regex_jobs",
+              "job_patterns": ["^M.*I$", "^M.*L$", "^M.*S$", "^M.*U$"]
+            }
+          ]
+        },
+        {
+          "time": ["07:30", "16:30"],
+          "timezone": "America/New_York",
+          "groups": [
+            {
+              "name": "primary_jobs",
+              "job_list": ["CHKSREDR", "CHKSONLY", "CHKSTMT0", "CHKHIVOL", "TPSCHK01"]
+            }
+          ]
+        },
+        {
+          "time": ["11:00"],
+          "timezone": "America/New_York",
+          "groups": [
+            {
+              "name": "primary_jobs", 
+              "job_list": ["CGS71530", "CGS72190", "CGS34290", "CGS73060", "ANN00090", "CGS73040", "CGS42760", "CGS38920", "CGS72130", "CGS72580", "GJ81909T", "OTH54630"]
+            },
+            {
+              "name": "secondary_jobs",
+              "job_list": ["CGS72150", "A4567890S", "CGS71290", "CGS71680", "CGS72010", "ANN00120", "CGS70350", "CGS42966", "D-CGS72110", "CGS72110", "CGS72230"]
+            },
+            {
+              "name": "others_jobs",
+              "job_list": ["CGS72510", "CGS72590", "CGS7262", "CGS72620", "CGS72630", "CGS70370", "CGS72660", "CGS72740", "ANN00160", "CGS85470", "D-CGS85470"]
+            },
+            {
+              "name": "regex_jobs",
+              "job_patterns": ["^A.*L$", "^A.*S$"]
+            }
+          ]
+        },
+        {
+          "time": ["11:30"],
+          "timezone": "America/New_York",
+          "groups": [
+            {
+              "name": "primary_jobs",
+              "job_list": ["CGS61660", "CGS61670", "CGS71230", "IPN80000", "IPN8000L", "CGS61680", "CGS61690", "CGS71280", "CGS71520", "ANN00030", "CGS72050"]
+            },
+            {
+              "name": "secondary_jobs",
+              "job_list": ["CGS71270", "CGS72200", "IPN8000F", "CGS7153L", "ANN00100", "BNK01982", "BNK04197", "CGS73000", "IPN80050", "CGS72860", "ANN00050"]
+            },
+            {
+              "name": "others_jobs",
+              "job_list": ["CGS71890", "MJ9162A0", "MJ9162B0", "MJ9162B3", "MJ9162B5", "MJ9162F0", "ANN00180", "ANN00210", "MJ9162G0"]
+            }
+          ]
+        },
+        {
+          "time": ["12:00"],
+          "timezone": "America/New_York",
+          "groups": [
+            {
+              "name": "primary_jobs",
+              "job_list": ["MJ9162I0", "MJ9162J5", "MJ9162N0", "MJ9162Q0", "MJ9162R0", "ANN00200", "CGS70340", "MJ9162S0", "MJ747180", "MJ747190"]
+            },
+            {
+              "name": "secondary_jobs",
+              "job_list": ["MJ9163G0", "CGS73050", "CGS71870", "PJ24403P", "PJ244030", "ANN00140", "ANN00150", "ANN00130", "ANN00170", "ANN00190", "D-OTH65310"]
+            },
+            {
+              "name": "others_jobs",
+              "job_list": ["OTH65310", "CGS72270", "GJ632610", "OTH65490", "OTH65330", "PRI20000", "CGS71260", "ANN00010", "CGS72280", "ANN00080", "ANN00060"]
+            }
+          ]
+        },
+        {
+          "time": ["12:30"],
+          "timezone": "America/New_York",
+          "groups": [
+            {
+              "name": "primary_jobs",
+              "job_list": ["RISEPOD80", "PSI00010", "PRI02090", "RNQ00010", "OTH65300", "CGS72300"]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

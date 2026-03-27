@@ -1,0 +1,53 @@
+{
+  "clients": {
+    "PFG": {
+      "enabled": true,
+      "alert": {
+        "email_enabled": true,
+        "from": "noreply@broadridge.com",
+        "email_to": [
+          "b0f28b78.Broadridge.onmicrosoft.com@amer.teams.ms",
+          "09da4028.Broadridge.onmicrosoft.com@amer.teams.ms"
+        ]
+      },
+      "db_connection": {
+        "dbkey": "/dpmtest/dev/database-secret"
+      },
+      "s3_checks": [
+        {
+          "name": "stale_transmission_files",
+          "enabled": true,
+          "bucket": "br-icsdev-dpmdi-dataingress-us-east-1-s3",
+          "prefixes": [
+            "PFG/to_internal/",
+            "PFG/output/to_internal/marcomm/"
+          ],
+          "file_patterns": [
+            "^.*\\.tgz$",
+            "^.*\\.zip$",
+            "^.*\\.json$"
+          ],
+          "older_than_minutes": 60,
+          "list_threshold": 200,
+          "alert_if_no_match": false
+        }
+      ],
+      "db_checks": [
+        {
+          "name": "pending_orders",
+          "enabled": true,
+          "db_name": "Orders",
+          "timezone": "UTC",
+          "time_window": {
+            "type": "today"
+          },
+          "query": "select orderid, status from notification_table where orderid in (select orderid from order_table where recieved_time >= '{{window_start}}' and status = 'PENDING')",
+          "list_threshold": 500,
+          "display_fields": [
+            "orderid"
+          ]
+        }
+      ]
+    }
+  }
+}

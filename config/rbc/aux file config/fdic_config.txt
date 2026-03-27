@@ -1,0 +1,22 @@
+# Field Type Description:
+#          X  = String
+#          N  = Numeric
+#       COMP  = Computational
+#      COMP3  = Computational 3
+#
+#-----|----------|----------------------------------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+# Sl  | COPYBOOK |              FIELD NAME                | START| END  |LENGTH| IN FORMAT| OUT FORMAT| OCCURS                                              | REDEFINES                    |
+#     |          |                                        |      |      |      |          |           |                                                     |                              |
+#-----|----------|--------------FDIC RECORD---------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+     1| ETSAUX  |FDIC-RECORD-TYPE                        |    1 |    2 |    2 | X        | X         |                                                     |                              |
+     2| ETSAUX  |FDIC-ACCOUNT-NUMBER                     |    3 |   15 |   13 | X        | X         |                                                     |                              |
+     3| ETSAUX  |FDIC-FUND-INDICATOR                     |   16 |   16 |    1 | X        | X         |                                                     |                              |
+     4| ETSAUX  |FDIC-PORTFOLIO-INDICATOR                |   17 |   17 |    1 | X        | X         |                                                     |                              |
+     5| ETSAUX  |FDIC-BANK-CODE                          |   18 |   21 |    4 | X        | X         |                                                     |                              |
+     6| ETSAUX  |FDIC-BANK-NAME                          |   22 |   46 |   25 | X        | X         |                                                     |                              |
+     7| ETSAUX  |FDIC-BANK-DEPOSIT-BAL                   |   47 |   61 |   15 | X        | X         |                                                     |                              |
+     8| ETSAUX  |FDIC-BANK-OPT-OUT-INDICATOR             |   62 |   62 |    1 | X        | X         |                                                     |                              |
+     9| ETSAUX  |FDIC-BANK-CITY                          |   63 |   87 |   25 | X        | X         |                                                     |                              |
+    10| ETSAUX  |FDIC-BANK-STATE                         |   88 |   89 |    2 | X        | X         |                                                     |                              |
+    11| ETSAUX  |FDIC-APYE                               |   90 |   96 |    7 | X        | X         |                                                     |                              |
+    12| ETSAUX  |FILLER1                                 |   97 |  100 |    4 | X        | X         |                                                     |                              |

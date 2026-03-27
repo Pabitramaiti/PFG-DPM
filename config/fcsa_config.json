@@ -1,0 +1,191 @@
+{
+    "clientName": "fcsa",
+    "clientId": "000001",
+    "applicationName": "fcsa",
+    "clientProduct": [
+        "Statements",
+        "Tax",
+        "Letters",
+        "Notices",
+        "Checks"
+    ],
+    "runType": [
+        "test",
+        "prod"
+    ],
+    "fileType": {
+        "FUNDHELD": "Statements",
+        "STMT": "Statements",
+        "STMTOFF": "Statements",
+        "AGDDLRNT": "Letters",
+        "AGDWLTRS": "Letters",
+        "AUTOREN": "Letters",
+        "CUSTCHG": "Notices",
+        "MATURE": "Notices",
+        "PASTDUE": "Notices",
+        "PATRMM": "NOT SURE",
+        "PAYVER": "Notices",
+        "RATCHG": "Notices",
+        "TIL90": "Notices",
+        "TIL240": "Notices",
+        "YENDSUMM": "Statements",
+        "1099A": "TAX",
+        "1099C": "TAX",
+        "1099MISC": "TAX",
+        "1099-NEC": "TAX",
+        "1099PATR": "TAX",
+        "1099S": "TAX",
+        "1098": "TAX",
+        "1099_INT": "TAX"
+    },
+    "filesToProcess": [
+        {
+            "filename": "(\\d{14})_(prod|test|PROD|TEST)_(FUNDHELD|STMT|STMTOFF|AGDDLRNT|AGDWLTRS|AUTOREN|CUSTCHG|MATURE|PASTDUE|PATR|PAYVER|RATECHG|TIL90|TIL240|YENDSUMM)\\.(xml|XML)",
+            "StepFunction": [
+                {
+                    "name": "validation",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_TRANSMISSION",
+                    "sfStepsToDone": {
+                        "ValidationXML": {
+                            "xsdPath": "fcsa/input/config/",
+                            "xsdPattern": "(FUNDHELD|STMT|STMTOFF|AGDDLRNT|AGDWLTRS|AUTOREN|CUSTCHG|MATURE|PASTDUE|PATR|PAYVER|RATECHG|TIL90|TIL240|YENDSUMM)\\.xsd",
+                            "wipPath": "fcsa/wip/",
+                            "xmlTag": "AuditIdentifier"
+                        },
+                        "ACKEmail": {
+                            "recipient_emails": [
+                                "gangarajam.guguloth@broadridge.com",
+                                "abhishek.harppad@broadridge.com"
+                            ],
+                            "cc_emails": [
+                                "abhishek.harppad@broadridge.com"
+                            ],
+                            "subject": "test subject for the email",
+                            "body": "test body text for the email",
+                            "attachment_flag": false,
+                            "object_key":"",
+                            "pattern": ""
+                        }
+                    }
+                },
+                {
+                    "name": "sendtotransmission",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_TRANSMISSION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "Transmission": {
+                            "transmissionDestinationKey": "fcsa/to_transmission/"
+                        }
+                    }
+                },
+                {
+                    "name": "invokesmartcomm",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_INVOKESMARTCOMM"
+                },
+                {
+                    "name": "ndmtoonprem",
+                    "order": "4",
+                    "endStep": "False",
+                    "initStep": "False",
+                    "sfKey": "SM_ARN_NDMTOONPREM"
+                },
+                {
+                    "name": "archival",
+                    "order": "5",
+                    "endStep": "True",
+                    "initStep": "False",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "fcsa/save/"
+                }
+            ]
+        },
+        {
+            "filename": "(\\d{14})_(prod|test|PROD|TEST)_(FUNDHELD|STMT|STMTOFF|AGDDLRNT|AGDWLTRS|AUTOREN|CUSTCHG|MATURE|PASTDUE|PATR|PAYVER|RATECHG|TIL90|TIL240|YENDSUMM)\\.(xml|XML)\\.transmission\\.done",
+            "StepFunction": [
+                {
+                    "name": "invokesmartcomm",
+                    "order": "1",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_INVOKESMARTCOMM",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "invokeSmartComm": {}
+                    },
+                    "sfParams": {
+                        "queue": "Batch",
+                        "type": "TRANSACTION_FILE",
+                        "config": "690710190",
+                        "name": "Batch"
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^(FUNDHELD|STMT|STMTOFF|AGDDLRNT|AGDWLTRS|AUTOREN|CUSTCHG|MATURE|PASTDUE|PATRMM|PAYVER|RATCHG|TIL90|TIL240|YENDSUMM|1099A|1099C|1099MISC|1099-NEC|1099PATR|1099S|1098|1099_INT)(\\d{14})_(PROD|TEST|prod|test)\\.(afp|AFP)$",
+            "StepFunction": [
+                {
+                    "name": "ndmtoonprem",
+                    "order": "1",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_NDMTOONPREM",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "ndmjson": {
+                            "Type": "afp",
+                            "xmlPath": "fcsa/input/",
+                            "xmlTag": "AuditIdentifier"
+                        }
+                    },
+                    "sfParams": {
+                        "job_name": "SmartCommFT",
+                        "archive_uri": "fcsa/to_internal/save/",
+                        "to_internal_uri": "fcsa/to_internal/",
+                        "to_internal_json_uri": "fcsa/to_internal/json/",
+                        "onprem_system": "fcsa",
+                        "onprem_subsystem": "fcsa",
+                        "onprem_folder": "input",
+                        "snode": {
+                            "dev": [
+                                "sterlingqa",
+                                "cdusr826"
+                            ],
+                            "qa": [
+                                "sterlingqa",
+                                "cdusr826"
+                            ],
+                            "uat": [
+                                "sterlingqa",
+                                "cdusr826"
+                            ],
+                            "prod": [
+                                "edhusiosp",
+                                "cdusr826"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "fcsa/save/"
+                }
+            ]
+        }
+    ],
+    "createdDateTime": "timestampinUTC",
+    "updatedDateTime": "timestampinUTC"
+  }

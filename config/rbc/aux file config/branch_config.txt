@@ -1,0 +1,34 @@
+# Field Type Description:
+#          X  = String
+#          N  = Numeric
+#       COMP  = Computational
+#      COMP3  = Computational 3
+#
+#-----|----------|----------------------------------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+# Sl  | COPYBOOK |              FIELD NAME                | START| END  |LENGTH| IN FORMAT| OUT FORMAT| OCCURS                                              | REDEFINES                    |
+#     |          |                                        |      |      |      |          |           |                                                     |                              |
+#-----|----------|----------TOH06-BRANCH-RECORD-----------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+     1| ETSAUX   |TOH06-FIRM-I                            |    1 |    4 |    4 | X        | X         |                                                     |                              |
+     2| ETSAUX   |TOH06-BRANCH-I                          |    5 |    6 |    2 | X        | X         |                                                     |                              |
+     3| ETSAUX   |TOH06-FIRM-RGN-I                        |    7 |   10 |    4 | X        | X         |                                                     |                              |
+     4| ETSAUX   |TOH06-COMPLEX-I                         |   11 |   13 |    3 | X        | X         |                                                     |                              |
+     5| ETSAUX   |TOH06-BRANCH-M                          |   14 |   43 |   30 | X        | X         |                                                     |                              |
+     6| ETSAUX   |TOH06-BR-ADDR-LINE-1-X                  |   44 |   83 |   40 | X        | X         |                                                     |                              |
+     7| ETSAUX   |TOH06-BR-ADDR-LINE-2-X                  |   84 |  123 |   40 | X        | X         |                                                     |                              |
+     8| ETSAUX   |TOH06-BR-ADDR-LINE-3-X                  |  124 |  163 |   40 | X        | X         |                                                     |                              |
+     9| ETSAUX   |TOH06-BR-ADDR-LINE-4-X                  |  164 |  203 |   40 | X        | X         |                                                     |                              |
+    10| ETSAUX   |TOH06-BR-TEL-N                          |  204 |  217 |   14 | X        | X         |                                                     |                              |
+    11| ETSAUX   |TOH06-BR-TOLL-FREE-TEL-N                |  218 |  231 |   14 | X        | X         |                                                     |                              |
+    12| ETSAUX   |TOH06-BR-FAX-N                          |  232 |  245 |   14 | X        | X         |                                                     |                              |
+    13| ETSAUX   |TOH06-GROSS-FIRM-TYPE-X                 |  246 |  246 |    1 | X        | X         |                                                     |                              |
+    14| ETSAUX   |TOH06-COST-CENTER-X                     |  247 |  250 |    4 | X        | X         |                                                     |                              |
+    15| ETSAUX   |TOH06-INACTIVE-F                        |  251 |  251 |    1 | X        | X         |                                                     |                              |
+    16| ETSAUX   |TOH06-ALT-BR-N                          |  252 |  256 |    5 | X        | X         |                                                     |                              |
+    17| ETSAUX   |TOH06-DIVN-I                            |  257 |  260 |    4 | X        | X         |                                                     |                              |
+    18| ETSAUX   |TOH06-BR-WEB-ADDR-X                     |  261 |  320 |   60 | X        | X         |                                                     |                              |
+    19| ETSAUX   |TOH06-BR-AFP-PG-SEG-M                   |  321 |  328 |    8 | X        | X         |                                                     |                              |
+    20| ETSAUX   |TOH06-BR-SCNDRY-FIRM-F                  |  329 |  329 |    1 | X        | X         |                                                     |                              |
+    21| ETSAUX   |TOH06-BUS-LINE-C                        |  330 |  330 |    1 | X        | X         |                                                     |                              |
+    22| ETSAUX   |FILLER                                  |  331 |  428 |   98 | X        | X         |                                                     |                              |
+    23| ETSAUX   |TOH06-LAST-UPDT-USRD-X                  |  429 |  436 |    8 | X        | X         |                                                     |                              |
+    24| ETSAUX   |TOH06-LAST-UPDT-S                       |  437 |  462 |   26 | X        | X         |                                                     |                              |

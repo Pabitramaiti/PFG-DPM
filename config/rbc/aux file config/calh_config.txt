@@ -1,0 +1,51 @@
+# Field Type Description:
+#          X  = String
+#          N  = Numeric
+#       COMP  = Computational
+#      COMP3  = Computational 3
+#
+#-----|----------|----------------------------------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+# Sl  | COPYBOOK |              FIELD NAME                | START| END  |LENGTH| IN FORMAT| OUT FORMAT| OCCURS                                              | REDEFINES                    |
+#     |          |                                        |      |      |      |          |           |                                                     |                              |
+#-----|----------|----------------CALH-REC---------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+     1| ETSAUX   |CALH-REC-TYPE                           |    1 |    1 |    1 | X        | X         |                                                     |                              |
+     2| ETSAUX   |CALH-ACCT-NUM                           |    2 |    9 |    8 | X        | X         |                                                     |                              |
+     3| ETSAUX   |CALH-LOC-ACT-NUM                        |   10 |   25 |   16 | X        | X         |                                                     |                              |
+     4| ETSAUX   |CALH-CUR-OUT-AMT-SIGN                   |   26 |   26 |    1 | X        | X         |                                                     |                              |
+     5| ETSAUX   |CALH-CUR-OUT-AMT-INT                    |   27 |   39 |   13 | X        | X         |                                                     |                              |
+     6| ETSAUX   |CALH-CUR-OUT-AMT-DEC                    |   40 |   40 |    1 | X        | X         |                                                     |                              |
+     7| ETSAUX   |CALH-CUR-OUT-AMT-FRAC                   |   41 |   45 |    5 | X        | X         |                                                     |                              |
+     8| ETSAUX   |CALH-CUR-AVL-AMT-SIGN                   |   46 |   46 |    1 | X        | X         |                                                     |                              |
+     9| ETSAUX   |CALH-CUR-AVL-AMT-INT                    |   47 |   59 |   13 | X        | X         |                                                     |                              |
+    10| ETSAUX   |CALH-CUR-AVL-AMT-DEC                    |   60 |   60 |    1 | X        | X         |                                                     |                              |
+    11| ETSAUX   |CALH-CUR-AVL-AMT-FRAC                   |   61 |   65 |    5 | X        | X         |                                                     |                              |
+    12| ETSAUX   |CALH-CUR-TOT-AMT-SIGN                   |   66 |   66 |    1 | X        | X         |                                                     |                              |
+    13| ETSAUX   |CALH-CUR-TOT-AMT-INT                    |   67 |   79 |   13 | X        | X         |                                                     |                              |
+    14| ETSAUX   |CALH-CUR-TOT-AMT-DEC                    |   80 |   80 |    1 | X        | X         |                                                     |                              |
+    15| ETSAUX   |CALH-CUR-TOT-AMT-FRAC                   |   81 |   85 |    5 | X        | X         |                                                     |                              |
+    16| ETSAUX   |CALH-CUR-AS-OF-DATE-CC                  |   86 |   87 |    2 | X        | X         |                                                     |                              |
+    17| ETSAUX   |CALH-CUR-AS-OF-DATE-YY                  |   88 |   89 |    2 | X        | X         |                                                     |                              |
+    18| ETSAUX   |FILLER-001                              |   90 |   90 |    1 | X        | X         |                                                     |                              |
+    19| ETSAUX   |CALH-CUR-AS-OF-DATE-MM                  |   91 |   92 |    2 | X        | X         |                                                     |                              |
+    20| ETSAUX   |FILLER-002                              |   93 |   93 |    1 | X        | X         |                                                     |                              |
+    21| ETSAUX   |CALH-CUR-AS-OF-DATE-DD                  |   94 |   95 |    2 | X        | X         |                                                     |                              |
+    22| ETSAUX   |FILLER-003                              |   96 |  100 |    5 | X        | X         |                                                     |                              |
+    23| ETSAUX   |CALH-YTD-OUT-AMT-SIGN                   |  101 |  101 |    1 | X        | X         |                                                     |                              |
+    24| ETSAUX   |CALH-YTD-OUT-AMT-INT                    |  102 |  114 |   13 | X        | X         |                                                     |                              |
+    25| ETSAUX   |CALH-YTD-OUT-AMT-DEC                    |  115 |  115 |    1 | X        | X         |                                                     |                              |
+    26| ETSAUX   |CALH-YTD-OUT-AMT-FRAC                   |  116 |  120 |    5 | X        | X         |                                                     |                              |
+    27| ETSAUX   |CALH-YTD-AVL-AMT-SIGN                   |  121 |  121 |    1 | X        | X         |                                                     |                              |
+    28| ETSAUX   |CALH-YTD-AVL-AMT-INT                    |  122 |  134 |   13 | X        | X         |                                                     |                              |
+    29| ETSAUX   |CALH-YTD-AVL-AMT-DEC                    |  135 |  135 |    1 | X        | X         |                                                     |                              |
+    30| ETSAUX   |CALH-YTD-AVL-AMT-FRAC                   |  136 |  140 |    5 | X        | X         |                                                     |                              |
+    31| ETSAUX   |CALH-YTD-TOT-AMT-SIGN                   |  141 |  141 |    1 | X        | X         |                                                     |                              |
+    32| ETSAUX   |CALH-YTD-TOT-AMT-INT                    |  142 |  154 |   13 | X        | X         |                                                     |                              |
+    33| ETSAUX   |CALH-YTD-TOT-AMT-DEC                    |  155 |  155 |    1 | X        | X         |                                                     |                              |
+    34| ETSAUX   |CALH-YTD-TOT-AMT-FRAC                   |  156 |  160 |    5 | X        | X         |                                                     |                              |
+    35| ETSAUX   |CALH-YTD-AS-OF-DATE-CC                  |  161 |  162 |    2 | X        | X         |                                                     |                              |
+    36| ETSAUX   |CALH-YTD-AS-OF-DATE-YY                  |  163 |  164 |    2 | X        | X         |                                                     |                              |
+    37| ETSAUX   |FILLER-004                              |  165 |  165 |    1 | X        | X         |                                                     |                              |
+    38| ETSAUX   |CALH-YTD-AS-OF-DATE-MM                  |  166 |  167 |    2 | X        | X         |                                                     |                              |
+    39| ETSAUX   |FILLER-005                              |  168 |  168 |    1 | X        | X         |                                                     |                              |
+    40| ETSAUX   |CALH-YTD-AS-OF-DATE-DD                  |  169 |  170 |    2 | X        | X         |                                                     |                              |
+    41| ETSAUX   |FILLER-006                              |  171 |  175 |    5 | X        | X         |                                                     |                              |

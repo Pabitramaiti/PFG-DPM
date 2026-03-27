@@ -1,0 +1,76 @@
+{
+    "clientName": "lpl_sca",
+    "clientId": "000006",
+    "applicationName": "lpl-sca",
+    "clientProduct": [
+        "Statements"
+    ],
+    "runType": [
+        "test",
+        "prod"
+    ],
+    "fileType": {
+       "BETA": "Statements"
+    },
+    "inputPath": "lpl_sca/input/",
+    "filesToProcess": [
+        {
+            "filename": "(?:CIT_TEST_)?LPLSCASTATEMENT_([A-Z0-9]{9})_([0-9]{3})_([a-z0-9_]+)_([0-9]{4})([0-1][0-9])([0-3][0-9])T([0-2][0-9])([0-5][0-9])([0-5][0-9])([0-9][0-9][0-9])\\.trigger",
+            "fileType": "trigger",
+            "StepFunction": [
+                {
+                    "name": "CDMextraction",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CDMEXTRACTION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "createbrxextractiondata": {
+                            "input_folder": "lpl_sca/input",
+                            "wipPath": "lpl_sca/wip",
+                            "kafka_url_parameter": "dpm-kafka-dev-url",
+                            "kafka_topic": "br.statements.wif.documents",
+                            "tableInfo": {
+                                "region": "us-east-1",
+                                "dbkey": "/dpmtest/dev/database-secret",
+                                "dbname": "LPL-SCA",
+                                "schema": "abhi_schema",
+                                "summary_option": "{\"Income Summary\" : \"BalanceTable\", \"Asset Allocation\": \"BothTables\"}",
+                                "schema_set_query": "SET search_path TO",
+                                "function_call_query": "SELECT * FROM create_json_for_extraction(:identifier, :clientId, :origin, :summary_option)"
+                            },
+                            "fileNameFormat": {
+                                "clientName": "lpl-sca",
+                                "contactTypeMap": {
+                                    "AccountHolder": "single",
+                                    "HouseHoldMasterAccount": "master",
+                                    "HouseHoldSisterAccount": "sister"
+                                },
+                                "processType": {
+                                    "periodDateRange": [
+                                        {
+                                            "name": "END",
+                                            "fileName": "mon",
+                                            "topicName": "MONTH-END",
+                                            "daterange": "> 15"
+                                        },
+                                        {
+                                            "name": "MID",
+                                            "fileName": "mid",
+                                            "topicName": "MID-MONTH",
+                                            "daterange": "< 15"
+                                        }
+                              ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "createdDateTime": "timestampinUTC",
+    "updatedDateTime": "timestampinUTC",
+    "isActive": "true"
+}

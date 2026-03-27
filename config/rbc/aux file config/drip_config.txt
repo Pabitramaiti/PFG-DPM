@@ -1,0 +1,42 @@
+# Field Type Description:
+#          X  = String
+#          N  = Numeric
+#       COMP  = Computational
+#      COMP3  = Computational 3
+#
+#-----|----------|----------------------------------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+# Sl  | COPYBOOK |              FIELD NAME                | START| END  |LENGTH| IN FORMAT| OUT FORMAT| OCCURS                                              | REDEFINES                    |
+#     |          |                                        |      |      |      |          |           |                                                     |                              |
+#-----|----------|-------------DRIP-IN-REC----------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+     1| ETSAUX   |DRIP-KEY                                |    1 |   33 |   33 | X        | X         |                                                     |                              |
+     2| ETSAUX   |DRIP-TYPE-ACCOUNT-CD                    |   34 |   34 |    1 | X        | X         |                                                     |                              |
+     3| ETSAUX   |DRIP-TRANS-DATE                         |   35 |   42 |    8 | X        | X         |                                                     |                              |
+     4| ETSAUX   |DRIP-PROCC-DATE                         |   43 |   50 |    8 | X        | X         |                                                     |                              |
+     5| ETSAUX   |DRIP-SETTL-DATE                         |   51 |   58 |    8 | X        | X         |                                                     |                              |
+     6| ETSAUX   |DRIP-ACTION                             |   59 |   68 |   10 | X        | X         |                                                     |                              |
+     7| ETSAUX   |DRIP-ACCT-TYPE                          |   69 |   78 |   10 | X        | X         |                                                     |                              |
+     8| ETSAUX   |DRIP-TRANS-TYPE                         |   79 |   80 |    2 | X        | X         |                                                     |                              |
+     9| ETSAUX   |DRIP-SYMBOL                             |   81 |   86 |    6 | X        | X         |                                                     |                              |
+    10| ETSAUX   |DRIP-CUSIP                              |   87 |   95 |    9 | X        | X         |                                                     |                              |
+    11| ETSAUX   |DRIP-SECURITY-ADP-NBR                   |   96 |  102 |    7 | X        | X         |                                                     |                              |
+    12| ETSAUX   |DRIP-QUANTITY                           |  103 |  121 |   19 | X        | X         |                                                     |                              |
+    13| ETSAUX   |DRIP-PRICE                              |  122 |  140 |   19 | X        | X         |                                                     |                              |
+    14| ETSAUX   |DRIP-MARK-UP-DOWN                       |  141 |  146 |    6 | X        | X         |                                                     |                              |
+    15| ETSAUX   |DRIP-SALES-CHARGE-RATE                  |  147 |  152 |    6 | X        | X         |                                                     |                              |
+    16| ETSAUX   |DRIP-GROSS-AMOUNT                       |  153 |  170 |   18 | X        | X         |                                                     |                              |
+    17| ETSAUX   |DRIP-ACCRUED-INTEREST                   |  171 |  176 |    6 | X        | X         |                                                     |                              |
+    18| ETSAUX   |DRIP-COMMISSION                         |  177 |  182 |    6 | X        | X         |                                                     |                              |
+    19| ETSAUX   |DRIP-NET-AMOUNT                         |  183 |  200 |   18 | X        | X         |                                                     |                              |
+    20| ETSAUX   |DRIP-CATCD                              |  201 |  205 |    5 | X        | X         |                                                     |                              |
+    21| ETSAUX   |DRIP-CURRENCY                           |  206 |  208 |    3 | X        | X         |                                                     |                              |
+    22| ETSAUX   |DRIP-DESCRIPTION-1                      |  209 |  238 |   30 | X        | X         |                                                     |                              |
+    23| ETSAUX   |DRIP-DESCRIPTION-2                      |  239 |  268 |   30 | X        | X         |                                                     |                              |
+    24| ETSAUX   |DRIP-DESCRIPTION-3                      |  269 |  298 |   30 | X        | X         |                                                     |                              |
+    25| ETSAUX   |DRIP-DESCRIPTION-4                      |  299 |  328 |   30 | X        | X         |                                                     |                              |
+    26| ETSAUX   |DRIP-DESCRIPTION-5                      |  329 |  358 |   30 | X        | X         |                                                     |                              |
+    27| ETSAUX   |DRIP-DESCRIPTION-6                      |  359 |  388 |   30 | X        | X         |                                                     |                              |
+    28| ETSAUX   |DRIP-PRINT-DISCLOSURE                   |  389 |  423 |   35 | X        | X         |                                                     |                              |
+    29| ETSAUX   |FILLER-001                              |  424 |  488 |   65 | X        | X         |                                                     |                              |
+    30| ETSAUX   |SEQ-NBR                                 |  489 |  499 |   11 | X        | X         |                                                     |                              |
+    31| ETSAUX   |FILLER-002                              |  500 |  500 |    1 | X        | X         |                                                     |                              |
+    32| ETSAUX   |DRIP-ACCT-NUM                           |    1 |    8 |    8 | X        | X         |                                                     |                              |

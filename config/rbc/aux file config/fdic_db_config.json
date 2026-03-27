@@ -1,0 +1,21 @@
+{
+  "columns": [
+    {
+      "column_name": "key",
+      "type": "string"
+    }
+  ],
+  "AUX": {
+    "key": {
+      "key": "FDIC-ACCOUNT-NUMBER",
+      "type": "String",
+      "trim": true
+    }
+  },
+  "table_config": {
+    "table_name_pattern": "{client_id}_fdic_%s%s_reference_lookup_temp",
+    "position:1": "33:34",
+    "position:2": "35:36",
+    "dest_table_name_pattern": "{client_id}_fdic_%s%s_reference_lookup"
+  }
+}

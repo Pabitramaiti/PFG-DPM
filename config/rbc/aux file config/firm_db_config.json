@@ -1,0 +1,22 @@
+{
+  "columns": [
+    {
+      "column_name": "key",
+      "type": "string"
+    }
+  ],
+  "AUX": {
+    "key": {
+      "key": "TOH00-FIRM-I",
+      "type": "String",
+      "trim": true
+    }
+  },
+  "table_config": {
+    "table_name_pattern": "{client_id}_FIRM_%s%s%s_Reference_Lookup",
+    "position:1": "08:09",
+    "position:2": "10:11",
+    "position:3": "06:07",
+    "dest_table_name_pattern": "{client_id}_FIRM_%s%s%s_Reference_Lookup"
+  }
+}

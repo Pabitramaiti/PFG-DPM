@@ -1,0 +1,22 @@
+Dynamodb Config Table:- br_ics_dev_dpmdi_dpm_config_table-0
+                        br_ics_dev_dpmdi_transaction_table-0
+
+Lambda Functions --> br_icsdev_dpmdi_lmbd_sfn_trigger
+
+Step Function:- br-icsdev-dpmdi-us-east-1-sfn-di-historical_update
+                br-icsdev-dpmdi-us-east-1-sfn-di-truncate_schema
+                br-ics{env}-dpmdi-us-east-1-sfn-di-truncate_schema
+
+Glue Job:- br_icsdev_dpmdi_glue_historical_update
+            br_icsdev_dpmdi_glue_copy_files
+            br_icsdev_dpmdi_glue_truncate_schema
+            pabi_wfs_call_glue_job_for_truncate_schema
+
+s3 Location: br-icsdev-dpmdi-dataingress-us-east-1-s3
+
+
+"SM_ARN_TRUNCATESCHEMA": "arn:aws:states:{region}:{account_id}:stateMachine:pabi_wfs_call_glue_job_for_truncate_schema"
+TRUNCATE_SCHEMA_WFS_2026_03.trigger
+
+
+TRUNCATE_SCHEMA_WFS_2026_04.trigger

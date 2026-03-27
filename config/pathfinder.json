@@ -1,0 +1,773 @@
+{
+    "clientName": "pathfinder",
+    "clientId": "000006",
+    "applicationName": "pathfinder",
+    "clientProduct": [
+        "Statements"
+    ],
+    "runType": [
+        "test",
+        "prod"
+    ],
+    "fileType": {
+        "ETS0422": "Statement",
+        "B228": "Statements"
+    },
+    "multifileTableName": "dpm-di-db-dyn-retail_multi_file_validation",
+    "periodDateRange": [
+        {
+            "name": "END",
+            "daterange": "> 15"
+        },
+        {
+            "name": "MID",
+            "daterange": "< 15"
+        }
+    ],
+    "multifileData": [
+        {
+            "filename": "BIOS.B006.OUT.B228",
+            "fileType": [""],
+            "period": [
+                {
+                    "name": "END",
+                    "timing": "L1"
+                },
+                {
+                    "name": "MID",
+                    "timing": "M1"
+                }
+            ]
+        },
+        {
+            "filename": "ETS0510_BIOS.B006.OUT.B228",
+            "period": [
+                {
+                    "name": "END",
+                    "timing": "L1"
+                },
+                {
+                    "name": "MID",
+                    "timing": "M1"
+                }
+            ]
+        },
+        {
+            "filename": "ETS0422_BIOS.B006.OUT.B228",
+            "period": [
+                {
+                    "name": "END",
+                    "timing": "L1"
+                },
+                {
+                    "name": "MID",
+                    "timing": "M1"
+                }
+            ]
+        }
+    ],
+    "inputPath": "pathfinder/input/",
+    "filesToProcess": [
+        {
+            "filename": "BIOS.B006.OUT.B228.(|QA.)[0-9]{14}",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfStepsToDone": {
+                        "b228Conversion": {
+                            "input_folder": "pathfinder/input",
+                            "config_bucket": "",
+                            "config_folder": "pathfinder/config",
+                            "config_filename": "b228_config.txt",
+                            "output_bucket": "",
+                            "output_queue_folder": "pathfinder/output/",
+                            "header_queue_folder": "pathfinder/wip/to_brcc_header/",
+                            "hold_queue_folder": "pathfinder/wip/to_hold/",
+                            "queue_folder": "pathfinder/wip/to_brcc/",
+                            "header_input_folder": "pathfinder/input/",
+                            "thread_model": "M",
+                            "thread_num": "7",
+                            "batch_size": "50000",
+                            "run_type": "JSON",
+                            "trid_file": "trid_list.txt",
+                            "b1_settings": "b1_settings.txt",
+                            "file_validation": "False"
+                        }
+                    }
+                },
+                {
+                    "name": "Multi File Validation table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfNextKey": "SM_ARN_CREATE_TRIGGER_FILE",
+                    "sfStepsToDone": {
+                        "multiFileValidation": {
+                            "multifileConfig": ""
+                        }
+                    }
+                },
+                {
+                    "name": "createtriggerfile",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "TRUE",
+                    "sfKey": "SM_ARN_CREATE_TRIGGER_FILE",
+                    "input_folder": "pathfinder/input"
+                }
+            ]
+        },
+        {
+            "filename": "^(.*)\\.(Copybook|copybook)\\.(.*)\\.txt$",
+            "StepFunction": [
+                {
+                    "name": "copybook processing",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "copybooktojson": {
+                            "copybook_bucket": "br-icsdev-dpmpf-dataingress-us-east-1-s3",
+                            "copybook_key": "pathfinder/input/",
+                            "json_bucket": "",
+                            "trackrecords": "True",
+                            "Type": "txt",
+                            "Boolean": "True",
+                            "copybookDestination": "pathfinder/output/json/"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "pathfinder/input/save/"
+                }
+            ]
+        },
+        {
+            "filename": "(multifile-validation-kafka-trigger)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].txt",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "Kafka step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_KAFKA",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "kafka_load": {
+                            "send_folder": "pathfinder/wip/to_brcc/",
+                            "save_folder": "pathfinder/save/",
+                            "failed_folder": "pathfinder/failed/",
+                            "topic_name": "br.communication.brx.documents",
+                            "region": "us-east-1",
+                            "kafka_url_parameter": "dpm-kafka-dev-url"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "false",
+                    "endStep": "true",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "pathfinder/save/"
+                }
+            ]
+        },
+        {
+      "filename": "(|CIT_TEST_)(PFXSTATEMENT)_(|MONTHEND)(|MIDMONTH)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].trigger",
+      "fileType": "txt",
+      "StepFunction": [
+        {
+          "name": "metadataextraction",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_METADATAEXTRACTION",
+          "sfNextKey": "SM_ARN_STATEMENTDATAEXTRACTION",
+          "sfStepsToDone": {
+            "extractmetadata": {
+              "wipPath": "pathfinder/wip",
+              "accountsOutputFile": "accounts_list",
+              "outputFileType": "json",
+              "sql_queries": {
+                "columns_list": "partyid_list, partyidentifiervalue_list",
+                "limit": 20,
+                "metadata_query": "SELECT * FROM get_account_metadata({account_numbers}::TEXT[])",
+                "create_base_historical_tables": "SELECT create_base_historical_tables()",
+                "create_historical_table": "SELECT create_historical_table('{historicaltablename}', '{schemaname}')"
+              },
+              "tableInfo": {
+                "region": "us-east-1",
+                "dbkey": "/dpmtest/dev/database-secret",
+                "dbname": "PathFinder",
+                "schema": "public"
+              }
+            }
+          }
+        },
+        {
+          "name": "statementdataextraction",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "clientType":"type2",
+          "sfKey": "SM_ARN_STATEMENTDATAEXTRACTION",
+          "sfNextKey": "",
+          "sfStepsToDone": {
+            "extractaccounts": {
+              "bucket": "",
+              "env": "Dev",
+              "inputFile": "",
+              "party_section": "Party",
+              "balance_section": "Balance",
+              "wipPath": "pathfinder/wip",
+              "batch_size": "200",
+              "kafka":
+              {
+                "kafka_url_parameter": "dpm-kafka-dev-url",
+                "kafka_topic": "br.communication.wif.documents",
+                "kafka_username": "/dev/dpm/pp/pathfinder/kafka/username",
+                "kafka_password": "/dev/dpm/pp/pathfinder/kafka/password",
+                "kafka_endpoints": "b-1.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096,b-2.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096,b-3.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096",
+                "single_party_account_type": "SINGLE",
+                "group_party_account_type": "MULTIACCOUNT",
+                "hh_party_account_type": "HOUSEHOLD",
+                "master_party_contact_type": "PRIMARY",
+                "sister_party_contact_type": "SECONDARY",
+                "summary_party_contact_type": "SUMMARY"
+              },
+              "summary_options":
+              {
+                "Income Summary": "BalanceTable",
+                "Asset Allocation": "SemiBalanceTable",
+                "Margin Summary": "BalanceTable",
+                "GainLoss Summary": "NonBalanceTable",
+                "Retirement Summary": "BalanceTable",
+                "Market Value Over Time": "BalanceTable",
+                "Transaction Overview": "NonBalanceTable",
+                "Change In Value": "NonBalanceTable"
+              },
+              "tableInfo":
+              {
+                "region": "us-east-1",
+                "dbkey": "/dpmtest/dev/database-secret",
+                "dbname": "PathFinder",
+                "schema": "arshad_october_pr"
+              },
+              "sql_queries":
+              {
+                "clientID":"006",
+                "schema_set_query": "SET search_path TO",
+                "function_call_query": "SELECT * FROM create_json_for_extraction(%s, %s, %s)",
+                "temp_account_details_query": "SELECT * FROM temp_account_details",
+                "hh_advisor_query": "SELECT DATA FROM TEMP_EXTRACTION_RESULTS_PARTY WHERE PARTYID = %s AND SECTIONTYPE IN ('Advisor')",
+                "update_recon_table": "SELECT update_recon_table(%(accountinfo)s::json)"
+              },
+              "sql_section_queries" :
+                {
+                  "Party": "SELECT DATA FROM temp_extraction_results_party WHERE partyid = %s",
+                  "Transaction": "SELECT DATA FROM temp_extraction_results_transaction WHERE partyid = %s",
+                  "Position": "SELECT DATA FROM temp_extraction_results_position WHERE partyid = %s",
+                  "Balance": "SELECT DATA FROM temp_extraction_results_balance WHERE partyid = %s",
+                  "Communication": "SELECT DATA FROM temp_extraction_results_communication WHERE partyid = %s"
+                },
+              "sql_summary_section_queries":
+                {
+                  "summary_query" : "SELECT DATA FROM temp_extraction_results_summary WHERE partyid = %s",
+                  "hh_summary_query" : "SELECT * FROM temp_extraction_results_hh_summary WHERE partyid = %s"
+                },
+              "fileNameFormat": {
+                "clientName": "PFX",
+                "processType": {
+                  "periodDateRange": [
+                    {
+                      "name": "END",
+                      "fileName": "mon",
+                      "topicName": "MONTH-END",
+                      "daterange": "> 15"
+                    },
+                    {
+                      "name": "MID",
+                      "fileName": "mid",
+                      "topicName": "MID-MONTH",
+                      "daterange": "< 16"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+        {
+            "filename": "(ETS0510_|ETS0422_)BIOS.B006.OUT.B228.(|QA.)[0-9]{14}.json",
+            "fileType": "json",
+            "StepFunction": [
+                {
+                    "name": "Conversion step",
+                    "order": "1",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_KAFKA",
+                    "sfStepsToDone": {
+                        "b228HeaderPrep": {
+                            "header_input_json": "",
+                            "header_output_json": "",
+                            "config": {
+                                "ETS0510": {
+                                    "client_header_hierarchy": "data['B228_FILE']['CLIENT_HEADER'][0]",
+                                    "client_header_field": "'ETS0510'"
+                                },
+                                "ETS0422": {
+                                    "client_header_hierarchy": "data['B228_FILE']['CLIENT_HEADER'][0]",
+                                    "client_header_field": "'ETS0422'"
+                                }
+                            }
+                        }
+                    }
+                },{
+                  "name": "Kafka Header step",
+                  "order": "2",
+                  "initStep": "False",
+                  "endStep": "False",
+                  "sfKey": "SM_ARN_KAFKA",
+                  "sfNextKey": "SM_ARN_LOADSTAGE",
+                  "sfStepsToDone": {
+                    "kafkaload_file_exchange": {
+                      "topic": "br.communication.brx.headers.documents",
+                      "region": "us-east-1",
+                      "kafka_host": "b-1.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096,b-2.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096,b-3.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096",
+                      "expected_duration": "20",
+                      "consumer_interval": "2",
+                      "user_name": "/dev/dpm/pp/wells/kafka/username",
+                      "password": "/dev/dpm/pp/wells/kafka/password",
+                      "file_path": "pathfinder/input"
+                    }
+                  }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmtest/dev/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "ETS0510_BIOS.B006|ETS0422_BIOS.B006",
+                            "key_location": {
+                                "ETS0510_BIOS.B006": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "PathFinder",
+                                    "schema": "aux"
+                                },
+                                "ETS0422_BIOS.B006": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "PathFinder",
+                                    "schema": "aux"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Multi File Validation table step",
+                    "order": "4",
+                    "initStep": "False",
+                    "endStep": "End",
+                    "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "multiFileValidation": {
+                        "multifileConfig": ""
+                        }
+                    }
+                }
+            ]
+        },
+      {
+      "filename": "006_preference_reference_lookup.csv",
+      "fileType": "csv",
+      "StepFunction": [
+        {
+          "name": "delimited to json processing",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_CONVERSION",
+          "sfNextKey": "SM_ARN_LOADSTAGE",
+          "sfStepsToDone": {
+            "delimitedtojson": {
+              "delimiter": "|",
+              "config": {
+                "AccountDeliveryPreferences": {
+                  "header_identifiers": [
+                    "ACCOUNTNUMBER"
+                  ],
+                  "trailer_identifiers": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Load to Staging table step",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "LoadStage": {
+              "key": "0",
+              "batch_size": "1000",
+              "dbkey": "/dpmtest/dev/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "base_file_name": "006_preference_reference_lookup",
+              "key_location": {
+                "006_preference_reference_lookup": {
+                  "key_index": "0",
+                  "retention_days": "150",
+                  "database": "PathFinder",
+                  "schema": "public"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "sfNextKey": "",
+          "archivalDestinationKey": "pathfinder/input/save/"
+        }
+      ]
+    },
+        {
+            "filename": "^PFEX(?:uat|UAT|dev|DEV|test|TEST|prod|PROD|qa|QA)-.*-\\d{8}T\\d{6}\\.xml$",
+            "StepFunction": [
+                {
+                    "name": "validation",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_CONVERSION",
+                    "sfStepsToDone": {
+                        "ValidationXML": {
+                            "xsdPath": "pathfinder/config/",
+                            "xsdPattern": "(PFEX|pfex)\\.xsd",
+                            "wipPath": "pathfinder/wip/",
+                            "xmlTag": "pfex"
+                        },
+                        "ACKEmail": {
+                            "key": "",
+                            "skip_email_send": "",
+                            "recipient_emails": [
+                                "prashant.barve@broadridge.com"
+                            ],
+                            "subject": "PFEX file validation",
+                            "body": "This mail is related to the 1st step function when processing the PFEX file validation.",
+                            "cc_emails": [
+                                "prashant.barve@broadridge.com"
+                            ],
+                            "object_prefix": "",
+                            "bucket": "",
+                            "pattern": "",
+                            "attachment_flag": false,
+                            "email_input_format": "",
+                            "email_input_file": "",
+                            "email_output_format": "",
+                            "email_output_delimiter": ""
+                        }
+                    }
+                },
+                {
+                    "name": "Conversion step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "xmltojson": {
+                            "xmlDestination": "pathfiner/wip/xmltojson"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "pathfinder/save/pfex/"
+                }
+            ]
+        },
+        {
+            "filename": "^wif_imb_config_dev_(20\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])(0\\d|1\\d|2[0-3])[0-5]\\d)\\.txt$",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "delimited to json processing",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "delimitedtojson": {
+                            "delimiter": "%~",
+                            "s3_output_file": "pathfinder/output/wif_imb_config_dev_202511071217.json",
+                            "config": {
+                                "wif_imb_config_dev_202511071217": {
+                                    "header_identifiers": [
+                                        "CONFIG_KEY",
+                                        "CONFIG_VALUE",
+                                        "LANGUAGE"
+                                    ],
+                                    "trailer_identifiers": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmuev1/qa/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "wif_imb_config_dev_202511071217.json",
+                            "key_location": {
+                                "wif_imb_config_dev_202511071217": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "PathFinder",
+                                    "schema": "public"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "pathfinder/input/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^wif_imb_intelligent_dev_insertion_(20\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])(0\\d|1\\d|2[0-3])[0-5]\\d)\\.txt$",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "delimited to json processing",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "delimitedtojson": {
+                            "delimiter": "%~",
+                            "s3_output_file": "pathfinder/output/wif_imb_intelligent_dev_insertion_202511071217.json",
+                            "config": {
+                                "wif_imb_intelligent_dev_insertion_202511071217": {
+                                    "header_identifiers": [
+                                        "MATERIAL_ID",
+                                        "URL_SEQ_NBR",
+                                        "URL_TYPE_CD",
+                                        "URL"
+                                    ],
+                                    "trailer_identifiers": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmuev1/qa/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "wif_imb_intelligent_dev_insertion_202511071217.json",
+                            "key_location": {
+                                "wif_imb_intelligent_dev_insertion_202511071217": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "PathFinder",
+                                    "schema": "public"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "pathfinder/input/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^wif_imb_material_feed_dev_(20\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])(0\\d|1\\d|2[0-3])[0-5]\\d)\\.txt$",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "delimited to json processing",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "delimitedtojson": {
+                            "delimiter": "%~",
+                            "s3_output_file": "pathfinder/output/wif_imb_material_feed_dev_202511071217.json",
+                            "config": {
+                                "wif_imb_material_feed_dev_202511071217": {
+                                    "header_identifiers": [
+                                        "MATERIAL_ID",
+                                        "URL_SEQ_NBR",
+                                        "URL",
+                                        "URL_TYPE_CD"
+                                    ],
+                                    "trailer_identifiers": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmuev1/qa/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "wif_imb_material_feed_dev_202511071217.json",
+                            "key_location": {
+                                "wif_imb_material_feed_dev_202511071217": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "PathFinder",
+                                    "schema": "public"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "pathfinder/input/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^wif_imb_distribution_(20\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])(0\\d|1\\d|2[0-3])[0-5]\\d)\\.txt$",
+            "StepFunction": [
+                {
+                    "name": "conversion_step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmuev1/qa/database-secret",
+                            "java_s3_if": "pathfinder/input",
+                            "java_s3_cfg": "pathfinder/config/imb_distributionfile_config.txt",
+                            "java_s3_db_config": "pathfinder/config/imb_distributionfile_db_config.json",
+                            "java_s3_field_filter_config": "pathfinder/config/imb_distributionfile_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "DIST",
+                            "java_client_name": "pfx",
+                            "java_client_id": "006",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_destination_format": "table",
+                            "java_move_table_if_exists": "false",
+                            "java_schema": "public"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "createdDateTime": "timestampinUTC",
+    "updatedDateTime": "timestampinUTC",
+    "isActive": "true"
+}

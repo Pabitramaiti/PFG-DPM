@@ -1,0 +1,42 @@
+# Field Type Description:
+#          X  = String
+#          N  = Numeric
+#       COMP  = Computational
+#      COMP3  = Computational 3
+#
+#-----|----------|----------------------------------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+# Sl  | COPYBOOK |              FIELD NAME                | START| END  |LENGTH| IN FORMAT| OUT FORMAT| OCCURS                                              | REDEFINES                    |
+#     |          |                                        |      |      |      |          |           |                                                     |                              |
+#-----|----------|--------------FIRM1 RECORD--------------|------|------|------|----------|-----------|-----------------------------------------------------|------------------------------|
+     1| ETSAUX |TOH00-FIRM-I                      |    1 |    4 |    4 | X        | X         |                                                     |                              |
+     2| ETSAUX |TOH00-FIRM-ADDR-LINE-1-V          |    5 |   34 |   30 | X        | X         |                                                     |                              |
+     3| ETSAUX |TOH00-FIRM-ADDR-LINE-2-V          |   35 |   64 |   30 | X        | X         |                                                     |                              |
+     4| ETSAUX |TOH00-FIRM-ADDR-LINE-3-V          |   65 |   94 |   30 | X        | X         |                                                     |                              |
+     5| ETSAUX |TOH00-FIRM-ADDR-LINE-4-V          |   95 |  124 |   30 | X        | X         |                                                     |                              |
+     6| ETSAUX |TOH00-FIRM-CORP-TAX-N             |  125 |  133 |    9 | X        | X         |                                                     |                              |
+     7| ETSAUX |TOH00-FIRM-NAME-LN-CNT-Q          |  134 |  134 |    1 | X        | X         |                                                     |                              |
+     8| ETSAUX |TOH00-FIRM-ADR2-LINE-1-X          |  135 |  164 |   30 | X        | X         |                                                     |                              |
+     9| ETSAUX |TOH00-FIRM-ADR2-LINE-2-X          |  165 |  194 |   30 | X        | X         |                                                     |                              |
+    10| ETSAUX |TOH00-FIRM-ADR2-LINE-3-X          |  195 |  224 |   30 | X        | X         |                                                     |                              |
+    11| ETSAUX |TOH00-FIRM-ADR2-LINE-4-X          |  225 |  254 |   30 | X        | X         |                                                     |                              |
+    12| ETSAUX |TOH00-FIRM-GEN-LEDGE-N            |  255 |  262 |    8 | X        | X         |                                                     |                              |
+    13| ETSAUX |TOH00-FIRM-INACTV-CODE-X          |  263 |  263 |    1 | X        | X         |                                                     |                              |
+    14| ETSAUX |TOH00-FIRM-WEB-ADDR-X             |  264 |  323 |   60 | X        | X         |                                                     |                              |
+    15| ETSAUX |TOH00-FIRM-CONC-PAYOUT-X          |  324 |  324 |    1 | X        | X         |                                                     |                              |
+    16| ETSAUX |TOH00-FIRM-GROS-COM-PY-C          |  325 |  325 |    1 | X        | X         |                                                     |                              |
+    17| ETSAUX |TOH00-FIRM-HOLD-ACCT-N            |  326 |  333 |    8 | X        | X         |                                                     |                              |
+    18| ETSAUX |TOH00-FIRM-AFP-PG-SEG-M           |  334 |  341 |    8 | X        | X         |                                                     |                              |
+    19| ETSAUX |TOH00-FIRM-DCS-ACTIVAT-D          |  342 |  351 |   10 | X        | X         |                                                     |                              |
+    20| ETSAUX |TOH00-FIRM-DCS-TERM-D             |  352 |  361 |   10 | X        | X         |                                                     |                              |
+    21| ETSAUX |TOH00-FIRM-DCS-STATUS-C           |  362 |  362 |    1 | X        | X         |                                                     |                              |
+    22| ETSAUX |TOH00-FIRM-PROTEGENT-F            |  363 |  363 |    1 | X        | X         |                                                     |                              |
+    23| ETSAUX |TOH00-FIRM-ACCT-PREFIX-X          |  364 |  366 |    3 | X        | X         |                                                     |                              |
+    24| ETSAUX |TOH00-FIRM-STMT-GROUP-C           |  367 |  367 |    1 | X        | X         |                                                     |                              |
+    25| ETSAUX |TOH00-FIRM-RIA-F                  |  368 |  368 |    1 | X        | X         |                                                     |                              |
+    26| ETSAUX |TOH00-FIRM-IRA-TAX-N              |  369 |  377 |    9 | X        | X         |                                                     |                              |
+    27| ETSAUX |FILLER1                                 |  378 |  379 |    2 | X        | X         |                                                     |                              |
+    28| ETSAUX |TOH00-STMT-BACKER                 |  380 |  389 |   10 | X        | X         |                                                     |                              |
+    29| ETSAUX |TOH00-MTHLY-CNF-BACKER            |  390 |  397 |    8 | X        | X         |                                                     |                              |
+    30| ETSAUX |FILLER2                                 |  398 |  477 |   80 | X        | X         |                                                     |                              |
+    31| ETSAUX |TOH00-LAST-UPDT-USRD-X            |  478 |  485 |    8 | X        | X         |                                                     |                              |
+    32| ETSAUX |TOH00-LAST-UPDT-S                 |  486 |  511 |   26 | X        | X         |                                                     |                              |

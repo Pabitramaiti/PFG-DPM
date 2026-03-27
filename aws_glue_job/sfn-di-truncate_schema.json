@@ -1,0 +1,161 @@
+{
+  "Comment": "State machine to run Glue job for truncating tables",
+  "StartAt": "Truncation",
+  "States": {
+    "Truncation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "pabi_glue_wfs_truncate_schema",
+        "Arguments": {
+          "--client_name.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfStepsToDone.truncateschema.client_name",
+          "--data_base.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfStepsToDone.truncateschema.data_base",
+          "--schemas.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfStepsToDone.truncateschema.schemas",
+          "--exclude_tables.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfStepsToDone.truncateschema.exclude_tables",
+          "--ssmdbkey.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfStepsToDone.truncateschema.ssmdbkey"
+        }
+      },
+      "ResultPath": "$.AUXGlueJobOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileName",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileName",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "in progress",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "Choice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "StepFunctionsStartExecution",
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfNextKey",
+            "StringEquals": ""
+          }
+        }
+      ],
+      "Default": "Success"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_TRUNCATESCHEMA.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

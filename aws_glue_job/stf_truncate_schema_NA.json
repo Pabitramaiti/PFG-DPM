@@ -1,0 +1,21 @@
+{
+  "Comment": "State machine to run Glue job for truncating tables",
+  "StartAt": "Truncation",
+  "States": {
+    "Truncation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "pabi_glue_wfs_truncate_schema2",
+        "Arguments": {
+          "--ssmdbkey.$": "$.ssmdbkey",
+          "--client_name.$": "$.client_name",
+          "--data_base.$": "$.data_base",
+          "--schemas.$": "$.schemas",
+          "--exclude_tables.$": "$.exclude_tables"
+        }
+      },
+      "End": true
+    }
+  }
+}
