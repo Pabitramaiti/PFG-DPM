@@ -1,0 +1,577 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "ReportChecks",
+  "States": {
+    "ReportChecks": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingChecks",
+          "IsPresent": true,
+          "Next": "reportingChecks"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectusLambda",
+          "IsPresent": true,
+          "Next": "reportingProspectusLambda"
+        },
+        {
+          "Next": "reportingJanusTaxes",
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes",
+          "IsPresent": true
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectus",
+              "IsPresent": true
+            }
+          ],
+          "Next": "ParallelReporting"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms",
+          "IsPresent": true,
+          "Next": "ReportingConfirms_Single"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectus",
+          "IsPresent": true,
+          "Next": "ReportingProspectus_Single"
+        },
+        {
+          "Next": "Reporting_Jhi_stmt",
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt",
+          "IsPresent": true
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "reportingChecks": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmjayant_lmbd_reporting_checks:$LATEST",
+        "Payload": {
+          "inputFileName.$": "$.StatePayload.fileName",
+          "bucket.$": "$.StatePayload.bucket",
+          "inputPathList.$": "States.JsonToString($.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingChecks.inputPathList)",
+          "inputPatternList.$": "States.JsonToString($.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingChecks.inputPatternList)",
+          "inputKeyList.$": "States.JsonToString($.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingChecks.inputKeyList)",
+          "reportPathList.$": "States.JsonToString($.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingChecks.reportPathList)",
+          "configKeyList.$": "States.JsonToString($.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingChecks.configKeyList)",
+          "transactionId.$": "$.StatePayload.transactionId"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "ResultPath": "$.reportChecksOutput"
+    },
+    "ReportingConfirms_Single": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "dpmdev-di-glue-reporting",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "--xml_file_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms.xml_file_key",
+          "--config_s3_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms.config_s3_path",
+          "--output_s3_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms.output_s3_path"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.reportingConfirmsOutput"
+    },
+    "ReportingProspectus_Single": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmjayant_glue_reporting_prospectus",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--xml_file_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectus.xml_file_key",
+          "--config_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectus.config_key"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.reportingProspectusOutput"
+    },
+    "ParallelReporting": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "reportingConfirms",
+          "States": {
+            "reportingConfirms": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "dpmdev-di-glue-reporting",
+                "Arguments": {
+                  "--inputFileName.$": "$.StatePayload.fileName",
+                  "--bucket_name.$": "$.StatePayload.bucket",
+                  "--transactionId.$": "$.StatePayload.transactionId",
+                  "--xml_file_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms.xml_file_key",
+                  "--config_s3_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms.config_s3_path",
+                  "--output_s3_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingConfirms.output_s3_path"
+                }
+              },
+              "End": true,
+              "ResultPath": "$.reportingConfirmsOutput"
+            }
+          }
+        },
+        {
+          "StartAt": "reportingProspectus",
+          "States": {
+            "reportingProspectus": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "br_icsdev_dpmjayant_glue_reporting_prospectus",
+                "Arguments": {
+                  "--inputFileName.$": "$.StatePayload.fileName",
+                  "--s3_bucket.$": "$.StatePayload.bucket",
+                  "--xml_file_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectus.xml_file_key",
+                  "--config_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectus.config_key"
+                }
+              },
+              "End": true,
+              "ResultPath": "$.reportingProspectusOutput"
+            }
+          }
+        }
+      ],
+      "ResultPath": "$.parallelResults",
+      "Next": "MergeParallelResults",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "MergeParallelResults": {
+      "Type": "Pass",
+      "InputPath": "$",
+      "OutputPath": "$",
+      "ResultPath": null,
+      "Next": "ExtractParallelResults"
+    },
+    "ExtractParallelResults": {
+      "Type": "Pass",
+      "Parameters": {
+        "StatePayload.$": "$.StatePayload",
+        "RetryParams.$": "$.RetryParams",
+        "reportingConfirmsOutput.$": "$.parallelResults[0].reportingConfirmsOutput",
+        "reportingProspectusOutput.$": "$.parallelResults[1].reportingProspectusOutput"
+      },
+      "Next": "report_mail"
+    },
+    "report_mail": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmjayant_lmbd_reporting_mail",
+        "Payload": {
+          "sender_email.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.sender_email",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.recipient_emails",
+          "cc_emails.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.cc_emails",
+          "subject.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.subject",
+          "body_text.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.body_text",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "add_timestamp_in_subject.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.add_timestamp_in_subject",
+          "add_timestamp_in_body.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.add_timestamp_in_body",
+          "attachment_files.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reporting_mail.attachment_files"
+        }
+      },
+      "ResultSelector": {
+        "statusCode.$": "$.Payload.statusCode",
+        "body.$": "$.Payload.body"
+      },
+      "ResultPath": "$.emailResult",
+      "Next": "CheckEmailStatus",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "CheckEmailStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.emailResult.statusCode",
+          "NumericEquals": 200,
+          "Next": "SuccessTransactionUpdation"
+        }
+      ],
+      "Default": "EmailFailureHandler"
+    },
+    "EmailFailureHandler": {
+      "Type": "Pass",
+      "Parameters": {
+        "StatePayload.$": "$.StatePayload",
+        "errorDetails": {
+          "Cause.$": "States.Format('Email Lambda returned status code {}. Response: {}', $.emailResult.statusCode, $.emailResult.body)"
+        }
+      },
+      "Next": "FailureTransactionUpdation"
+    },
+    "reportingProspectusLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:dpmdev-di-lambda-edit_prospectus_report",
+        "Payload": {
+          "wip_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectusLambda.wip_path",
+          "inputFileName.$": "$.StatePayload.fileName",
+          "config_bucket.$": "$.StatePayload.bucket",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "config_filename.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectusLambda.config_filename",
+          "config_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectusLambda.config_path",
+          "csv_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingProspectusLambda.csv_key"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "report_mail",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "ResultPath": "$.reportingProspectusLambdaOutput"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_REPORTING.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Job Succeeded",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_REPORTING.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_REPORTING.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_REPORTING.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_REPORTING.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_REPORTING.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_REPORTING.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_REPORTING.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_REPORTING.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_REPORTING.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_REPORTING.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "reportingJanusTaxes": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "glue_reporting_stmts",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--objectKey.$": "$.StatePayload.key",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--file_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.file_key",
+          "--file_pattern.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.file_pattern",
+          "--csv_file_pattern.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.csv_file_pattern",
+          "--file_type.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.file_type",
+          "--file_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.file_path",
+          "--config_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.config_path",
+          "--file_fields_order.$": "States.JsonToString($.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.file_fields_order)",
+          "--summary_report_file_name.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.summary_report_file_name",
+          "--production_report_file_name.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.production_report_file_name",
+          "--recon_report_file_name.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.recon_report_file_name",
+          "--report_creation_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.report_creation_path",
+          "--output_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusTaxes.output_path"
+        }
+      },
+      "Next": "EmailCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.glueOutput"
+    },
+    
+    "EmailCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "ACKEmailLambda",
+          "Variable": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail",
+          "IsPresent": true
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "Reporting_Jhi_stmt": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmpusalas_spark_report_stmts",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--objectKey.$": "$.StatePayload.key",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--file_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.file_key",
+          "--file_pattern.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.file_pattern",
+          "--file_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.file_path",
+          "--config_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.config_path",
+          "--report_file_name.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.report_file_name",
+          "--report_creation_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.report_creation_path",
+          "--output_path.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.reportingJanusStmt.output_path"
+        }
+      },
+      "Next": "EmailCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.glueOutput"
+    },
+    "ACKEmailLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_email_automation",
+        "Payload": {
+          "input_file.$": "$.StatePayload.key",
+          "skip_email_send.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.skip_email_send",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.recipient_emails",
+          "subject.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.subject",
+          "body.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.body",
+          "cc_emails.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.cc_emails",
+          "object_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.object_prefix",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "pattern.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.pattern",
+          "attachment_flag.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.attachment_flag",
+          "report_attachment_flag.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.report_attachment_flag",
+          "email_input_format.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.email_input_format",
+          "email_input_file.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.email_input_file",
+          "email_output_format.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.email_output_format",
+          "email_output_delimiter.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.email_output_delimiter",
+          "return_template_flag.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.return_template_flag",
+          "template_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.template_key",
+          "report_data_key.$": "$.StatePayload.SM_ARN_REPORTING.sfStepsToDone.ACKEmail.report_data_key"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ackEmailLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    }
+  }
+}

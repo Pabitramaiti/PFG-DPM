@@ -1,0 +1,856 @@
+{
+    "clientName": "RBC",
+    "clientId": "000006",
+    "applicationName": "RBC",
+    "clientProduct": [
+        "Statements"
+    ],
+    "runType": [
+        "dev",
+        "qa",
+        "uat",
+        "prod"
+    ],
+    "fileType": {
+        "B228": "Statements",
+        "XFSPROD.STM.ADNS2BKP.OH.FRM00": "Statements",
+        "XFSPROD.STM.ADNS2BKP.OH.BRCH06": "Statements",
+        "XFSPROD.STM.ADNS2BKP.OH.HH00": "Statements",
+        "ETS0510": "Statements",
+        "ETS0422": "Statements"
+    },
+    "multifileTableName": "dpm-di-db-dyn-rbc_multi_file_validation",
+    "periodDateRange": [
+        {
+            "name": "END",
+            "daterange": "> 15"
+        },
+        {
+            "name": "MID",
+            "daterange": "< 15"
+        }
+    ],
+    "multifileData": [
+        {
+            "filename": "BIOS.B006.OUT.B228",
+            "fileType": [
+                ""
+            ],
+            "period": [
+                {
+                    "name": "END",
+                    "timing": "L1"
+                },
+                {
+                    "name": "MID",
+                    "timing": "M1"
+                }
+            ]
+        },
+        {
+            "filename": "ETS0510_BIOS.B006.OUT.B228",
+            "period": [
+                {
+                    "name": "END",
+                    "timing": "L1"
+                },
+                {
+                    "name": "MID",
+                    "timing": "M1"
+                }
+            ]
+        },
+        {
+            "filename": "ETS0422_BIOS.B006.OUT.B228",
+            "period": [
+                {
+                    "name": "END",
+                    "timing": "L1"
+                },
+                {
+                    "name": "MID",
+                    "timing": "M1"
+                }
+            ]
+        }
+    ],
+    "inputPath": "RBC/input/",
+    "filesToProcess": [
+        {
+            "filename": "BIOS.B006.OUT.B228.(|QA.)[0-9]{14}",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfStepsToDone": {
+                        "b228Conversion": {
+                            "input_folder": "RBC/input",
+                            "config_bucket": "",
+                            "config_folder": "RBC/config",
+                            "config_filename": "b228_config.txt",
+                            "output_bucket": "",
+                            "output_queue_folder": "RBC/output/",
+                            "header_queue_folder": "RBC/wip/to_brcc_header/",
+                            "hold_queue_folder": "RBC/wip/to_hold/",
+                            "queue_folder": "RBC/wip/to_brcc_e2e/",
+                            "header_input_folder": "RBC/input/",
+                            "thread_model": "M",
+                            "thread_num": "30",
+                            "batch_size": "50000",
+                            "run_type": "JSON",
+                            "trid_file": "trid_list.txt",
+                            "b1_settings": "b1_settings.txt",
+                            "file_validation": "False",
+                            "account_filter": "account_filter_file.txt",
+                            "s3_batchsize": "1"
+                        }
+                    }
+                },
+                {
+                    "name": "Multi File Validation table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfNextKey": "SM_ARN_CREATE_TRIGGER_FILE",
+                    "sfStepsToDone": {
+                        "multiFileValidation": {
+                            "multifileConfig": ""
+                        }
+                    }
+                },
+                {
+                    "name": "createtriggerfile",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "TRUE",
+                    "sfKey": "SM_ARN_CREATE_TRIGGER_FILE",
+                    "input_folder": "RBC/input"
+                }
+            ]
+        },
+        {
+            "filename": "(ETS0510_|ETS0422_)BIOS.B006.OUT.B228.(|QA.)[0-9]{14}.json",
+            "fileType": "json",
+            "StepFunction": [
+                {
+                    "name": "Conversion step",
+                    "order": "1",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "b228HeaderPrep": {
+                            "header_input_json": "",
+                            "header_output_json": "",
+                            "config": {
+                                "ETS0510": {
+                                    "client_header_hierarchy": "data['B228_FILE']['CLIENT_HEADER'][0]",
+                                    "client_header_field": "'ETS0510'"
+                                },
+                                "ETS0422": {
+                                    "client_header_hierarchy": "data['B228_FILE']['CLIENT_HEADER'][0]",
+                                    "client_header_field": "'ETS0422'"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmtest/dev/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "ETS0510_BIOS.B006.OUT|ETS0422_BIOS.B006.OUT",
+                            "key_location": {
+                                "ETS0510_BIOS.B006.OUT": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "RBC",
+                                    "schema": "RBC"
+                                },
+                                "ETS0422_BIOS.B006.OUT": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "RBC",
+                                    "schema": "RBC"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Multi File Validation table step",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "End",
+                    "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "multiFileValidation": {
+                            "multifileConfig": ""
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "(multifile-validation-kafka-trigger)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].txt",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "Kafka step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_KAFKA",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "kafka_load": {
+                            "send_folder": "RBC/wip/to_brcc_e2e/",
+                            "save_folder": "RBC/save/",
+                            "failed_folder": "RBC/failed/",
+                            "topic_name": "br.rbc.communication.brx.documents",
+                            "region": "us-east-1",
+                            "file_formats": "json",
+                            "kafka_url_parameter": "dpm-kafka-dev-url"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "false",
+                    "endStep": "true",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "RBC/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^XFSAUX\\.STM\\.ADNS2BKP\\.OH\\.FIRM\\.(?:QA\\.|DEV\\.|)[0-9]{14}$",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_s3_cfg": "RBC/config/firm_config.txt",
+                            "java_s3_db_config": "RBC/config/firm_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/firm_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "AUX",
+                            "java_client_id": "006",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_destination_format": "table",
+                            "java_move_table_if_exists": "false",
+                            "java_schema": "public"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "false",
+                    "endStep": "true",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "RBC/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^XFSAUX\\.STM\\.ADNS2BKP\\.OH\\.BRANCH\\.(?:QA\\.|DEV\\.|)[0-9]{14}$",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_s3_cfg": "RBC/config/branch_config.txt",
+                            "java_s3_db_config": "RBC/config/branch_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/branch_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "AUX",
+                            "java_client_id": "006",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_destination_format": "table",
+                            "java_move_table_if_exists": "false",
+                            "java_schema": "public"
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "2",
+                    "initStep": "false",
+                    "endStep": "true",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "archivalDestinationKey": "RBC/save/"
+                }
+            ]
+        },
+{
+            "filename": "006_preference_reference_lookup.csv",
+            "fileType": "csv",
+            "StepFunction": [
+                {
+                    "name": "delimited to json processing",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "delimitedtojson": {
+                            "delimiter": "|",
+                            "config": {
+                                "006_preference_reference_lookup": {
+                                    "header_identifiers": [
+                                        "ACCOUNTNUMBER"
+                                    ],
+                                    "trailer_identifiers": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Load to Staging table step",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "LoadStage": {
+                            "key": "0",
+                            "batch_size": "1000",
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "fileName": "",
+                            "object_key": "",
+                            "base_file_name": "006_preference_reference_lookup",
+                            "key_location": {
+                                "006_preference_reference_lookup": {
+                                    "key_index": "0",
+                                    "retention_days": "150",
+                                    "database": "RBC",
+                                    "schema": "public"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "RBC/input/save/"
+                }
+            ]
+        },
+        {
+            "filename": "^XFSAUX\\.STM\\.ADNS2BKP\\.OH\\.FDIC\\.(?:QA\\.|DEV\\.|)[0-9]{14}$",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_bucket_name": "br-icsdev-dpmdi-dataingress-us-east-1-s3",
+                            "java_s3_cfg": "RBC/config/fdic_config.txt",
+                            "java_s3_db_config": "RBC/config/fdic_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/fdic_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "AUX",
+                            "java_client_id": "006",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_destination_format": "table",
+                            "java_move_table_if_exists": "false",
+                            "java_schema": "public"
+                        }
+                    }
+                },
+                {
+                    "name": "Grouping and loading to db",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "SelectToInsert": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "sql_query": "SELECT key,jsonb_agg(value) AS value FROM \"{table_name}\" group by key",
+                            "move_table_if_exists": "true",
+                            "delete_source_table": "true"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^XFSAUX\\.STM\\.ADNS2BKP\\.OH\\.CALH\\.(?:QA\\.|DEV\\.|)[0-9]{14}$",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_s3_cfg": "RBC/config/calh_config.txt",
+                            "java_s3_db_config": "RBC/config/calh_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/calh_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "AUX",
+                            "java_client_id": "006",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_destination_format": "table",
+                            "java_move_table_if_exists": "false",
+                            "java_schema": "public"
+                        }
+                    }
+                },
+                {
+                    "name": "Grouping and loading to db",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "SelectToInsert": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "sql_query": "SELECT key,jsonb_agg(value) AS value FROM \"{table_name}\" group by key",
+                            "move_table_if_exists": "true",
+                            "delete_source_table": "true"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^XFSAUX\\.STM\\.ADNS2BKP\\.OH\\.DRIP\\.(?:QA\\.|DEV\\.|)[0-9]{14}$",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_s3_cfg": "RBC/config/drip_config.txt",
+                            "java_s3_db_config": "RBC/config/drip_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/drip_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "AUX",
+                            "java_client_id": "006",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_destination_format": "table",
+                            "java_move_table_if_exists": "false",
+                            "java_schema": "public"
+                        }
+                    }
+                },
+                {
+                    "name": "Grouping and loading to db",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "SelectToInsert": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "sql_query": "SELECT key,jsonb_agg(value) AS value FROM \"{table_name}\" group by key",
+                            "move_table_if_exists": "true",
+                            "delete_source_table": "true"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "(|CIT_TEST_)(PATHFINDERSTATEMENT)_[A-Z0-9]{8}_[0-9]{3}_[A-Z0-9._]+_[0-9]{4}[0-1][0-9]([0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9][0-9][0-9][0-9])\\.trigger",
+            "fileType": "txt",
+            "StepFunction": [
+                {
+                    "name": "brxextraction",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_BRXEXTRACTION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "createbrxextractiondata": {
+                            "input_folder": "RBC/input",
+                            "single_party_account_type": "SINGLE",
+                            "group_party_account_type": "MULTIACCOUNT",
+                            "hh_party_account_type": "HOUSEHOLD",
+                            "master_party_contact_type": "PRIMARY",
+                            "sister_party_contact_type": "SECONDARY",
+                            "summary_party_contact_type_kafka": "SUMMARY",
+                            "party_section": "Party",
+                            "balance_section": "Balance",
+                            "wipPath": "RBC/wip",
+                            "kafka_url_parameter": "dpm-kafka-dev-url",
+                            "kafka_topic": "br.communication.wif.documents",
+                            "kafka_username": "/dev/dpm/pp/pathfinder/kafka/username",
+                            "kafka_password": "/dev/dpm/pp/pathfinder/kafka/password",
+                            "kafka_endpoints": "b-1.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096,b-2.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096,b-3.brgtoftbdevmskkafkabp.jhvo03.c17.kafka.us-east-1.amazonaws.com:9096",
+                            "tableInfo": {
+                                "region": "us-east-1",
+                                "dbkey": "/dpmtest/dev/database-secret",
+                                "dbname": "PathFinder",
+                                "schema": "public",
+                                "batch_size": "200",
+                                "summary_option": {
+                                    "Income Summary": "BalanceTable",
+                                    "Asset Allocation": "SemiBalanceTable",
+                                    "Margin Summary": "BalanceTable",
+                                    "GainLoss Summary": "NonBalanceTable",
+                                    "Retirement Summary": "BalanceTable",
+                                    "Market Value Over Time": "BalanceTable",
+                                    "Transaction Overview": "NonBalanceTable",
+                                    "Change In Value": "NonBalanceTable"
+                                },
+                                "schema_set_query": "SET search_path TO",
+                                "function_call_query": "SELECT * FROM create_json_for_extraction(%s, %s, %s, %s)",
+                                "temp_account_details_query": "SELECT * FROM temp_account_details",
+                                "hh_advisor_query": "SELECT DATA FROM TEMP_EXTRACTION_RESULTS_PARTY WHERE PARTYID = %s AND SECTIONTYPE IN ('Advisor')",
+                                "query_dic": {
+                                    "Party": "SELECT DATA FROM temp_extraction_results_party WHERE partyid = %s",
+                                    "Transaction": "SELECT DATA FROM temp_extraction_results_transaction WHERE partyid = %s",
+                                    "Position": "SELECT DATA FROM temp_extraction_results_position WHERE partyid = %s",
+                                    "Balance": "SELECT DATA FROM temp_extraction_results_balance WHERE partyid = %s",
+                                    "Communication": "SELECT DATA FROM temp_extraction_results_communication WHERE partyid = %s"
+                                },
+                                "summary_query": "SELECT DATA FROM temp_extraction_results_summary WHERE partyid = %s",
+                                "hh_summary_query": "SELECT * FROM temp_extraction_results_hh_summary WHERE partyid = %s"
+                            },
+                            "fileNameFormat": {
+                                "clientName": "RBC",
+                                "processType": {
+                                    "periodDateRange": [
+                                        {
+                                            "name": "END",
+                                            "fileName": "mon",
+                                            "topicName": "MONTH-END",
+                                            "daterange": "> 15"
+                                        },
+                                        {
+                                            "name": "MID",
+                                            "fileName": "mid",
+                                            "topicName": "MID-MONTH",
+                                            "daterange": "< 16"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^PFEX(?:uat|UAT|dev|DEV|test|TEST|prod|PROD|qa|QA)-.*-\\d{8}T\\d{6}\\.xml$",
+            "StepFunction": [
+                {
+                    "name": "validation",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_VALIDATION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "ValidationXML": {
+                            "xsdPath": "RBC/config/",
+                            "xsdPattern": "(PFEX|pfex)\\.xsd",
+                            "wipPath": "RBC/wip/",
+                            "xmlTag": "pfex"
+                        },
+                        "ACKEmail": {
+                            "recipient_emails": [
+                                "anurag.das@broadridge.com"
+                            ],
+                            "cc_emails": [
+                                "anurag.das@broadridge.com"
+                            ],
+                            "subject": "PFEX file validation",
+                            "body": "This mail is related to the 1st step function when processing the PFEX file validation.",
+                            "attachment_flag": false,
+                            "object_key": "",
+                            "pattern": ""
+                        }
+                    }
+                },
+                {
+                    "name": "PFEX file archival",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "RBC/input/save/"
+                }
+            ]
+        },
+        {
+            "filename": "BFFF.BTL[0-9]{3}.B228CL.MIDMONTH.([A-Z]|[0-9]){8}",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_bucket_name": "br-icsdev-dpmdi-dataingress-us-east-1-s3",
+                            "java_s3_cfg": "RBC/config/costbasis_b228_config.txt",
+                            "java_account_filter": "RBC/config/account_filter.json",
+                            "java_s3_db_config": "RBC/config/db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/field_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "ebcdic_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_destination_format": "table",
+                            "java_client_id": "006",
+                            "java_numthreads": 10,
+                            "java_schema": "public"
+                        },
+                        "cost_basis": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "schema": "rbc",
+                            "move_table_if_exists": "false"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^XFSAUX\\.STM\\.ADNS2BKP\\.OH\\.SWEEP\\.(?:QA\\.|DEV\\.|)[0-9]{14}$",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_bucket_name": "br-icsdev-dpmdi-dataingress-us-east-1-s3",
+                            "java_s3_cfg": "RBC/config/sweep_config.txt",
+                            "java_s3_db_config": "RBC/config/sweep_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/sweep_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "SWEEP1",
+                            "java_client_id": "006",
+                            "java_move_table_if_exists": "true",
+                            "java_destination_format": "table",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_schema": "public"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "XFSPROD.STM.ADNS2BKP.BMATF",
+            "fileType": "",
+            "StepFunction": [
+                {
+                    "name": "Convert step",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "",
+                    "sfStepsToDone": {
+                        "java_functions": {
+                            "dbkey": "/dpmtest/dev/retail/database-secret",
+                            "java_s3_if": "RBC/input",
+                            "java_bucket_name": "br-icsdev-dpmdi-dataingress-us-east-1-s3",
+                            "java_s3_cfg": "RBC/config/bmatfl_config.txt",
+                            "java_s3_db_config": "RBC/config/bmatfl_db_config.json",
+                            "java_s3_field_filter_config": "RBC/config/bmatfl_filter_config.json",
+                            "java_batchSize": "50000",
+                            "java_function": "columnar_to_json",
+                            "java_insert_batch_size": 10000,
+                            "java_region": "us-east-1",
+                            "java_numthreads": 10,
+                            "java_static_record_type": "BMATFL",
+                            "java_client_id": "006",
+                            "java_move_table_if_exists": "false",
+                            "java_destination_format": "table",
+                            "java_record_identification_action": "TABLE_CREATION",
+                            "java_schema": "public"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "filename": "^XFSPROD\\.STM\\.ADNS2BKP\\.OH\\.HH00$",
+            "StepFunction": [
+                {
+                    "name": "conversion",
+                    "order": "1",
+                    "initStep": "True",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_CONVERSION",
+                    "sfNextKey": "SM_ARN_LOADSTAGE",
+                    "sfStepsToDone": {
+                        "ebcdictoascii": {
+                            "file_path": "RBC/wip",
+                            "file_pattern": "^XFSPROD\\.STM\\.ADNS2BKP\\.OH\\.HH00$",
+                            "out_ASCII_path": "RBC/wip/output/",
+                            "EBCDIC_Mapping_Key": "RBC/config/CROSS-REFA-EBCDIC.json",
+                            "ASCII_Mapping_Key": "RBC/config/CROSS-REFA-ASCII.json",
+                            "COMMON_cfg_key": "RBC/config/RBC-CommonFields-HouseHolding.cfg",
+                            "filetype": "CROSS-REFA",
+                            "delimeter_flag": "True",
+                            "out_ASCII_pattern": "^XFSPROD\\.STM\\.ADNS2BKP\\.OH\\.HH00\\.asc$",
+                            "CheckOutputAsciiFlag": "false",
+                            "is_ascii_input": "true"
+                        }
+                    }
+                },
+                {
+                    "name": "LoadStage",
+                    "order": "2",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_LOADSTAGE",
+                    "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfStepsToDone": {
+                        "EnhancedLoadToDB": {
+                            "filesToProcess": [
+                                {
+                                    "loadStageConfigId": "CROSS-REFA",
+                                    "fileKey": "RBC/wip/output/XFSPROD.STM.ADNS2BKP.OH.HH00.asc",
+                                    "isOptional": false
+                                }
+                            ],
+                            "enableParallelProcessing": "true",
+                            "maxWorkers": "10",
+                            "batch_size": "1000",
+                            "backup_retention_count": "30",
+                            "databaseName": "RBC",
+                            "loadStageConfig": "RBC/config/RBC-LoadStageConfig-HouseHolding.json",
+                            "databaseSMKey": "/dpmtest/dev/database-secret",
+                            "databaseSchema": "rbc"
+                        }
+                    }
+                },
+                {
+                    "name": "Multi File Validation table step",
+                    "order": "3",
+                    "initStep": "False",
+                    "endStep": "False",
+                    "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+                    "sfNextKey": "SM_ARN_ARCHIVAL",
+                    "sfStepsToDone": {
+                        "multiFileValidation": {
+                            "multifileConfig": ""
+                        }
+                    }
+                },
+                {
+                    "name": "archival",
+                    "order": "4",
+                    "initStep": "False",
+                    "endStep": "True",
+                    "sfKey": "SM_ARN_ARCHIVAL",
+                    "sfNextKey": "",
+                    "archivalDestinationKey": "RBC/input/save/"
+                }
+            ]
+        }
+    ],
+    "createdDateTime": "timestampinUTC",
+    "updatedDateTime": "timestampinUTC",
+    "isActive": "true"
+}

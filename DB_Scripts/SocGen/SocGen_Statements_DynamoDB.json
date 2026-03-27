@@ -1,0 +1,4421 @@
+{
+  "clientName": "socgen_statements",
+  "clientId": "000025",
+  "applicationName": "Societe Generale Stmts",
+  "clientProduct": [
+    "Statements"
+  ],
+  "runType": [
+    "test",
+    "prod"
+  ],
+  "fileType": {
+    "ETS0420": "Statement",
+    "ETS0422": "Statement",
+    "ETS0510": "Statement",
+    "B228": "Statements",
+    "ETS50300": "Statements",
+    "ETS30100": "Statements",
+    "ETS27020": "Statements",
+    "bios_socgen_out_recon": "Statements",
+    "bios_socgen_out_recon_data_account_list": "Statements"
+  },
+  "multifileTableName": "br_ics_qa_dpmdi_socgen_statements_multi_file_validation_table-0",
+  "periodDateRange": [
+    {
+      "name": "END",
+      "daterange": "> 15"
+    },
+    {
+      "name": "MID",
+      "daterange": "< 15"
+    }
+  ],
+  "multifileData": [
+    {
+      "filename": "BIOS.C025.OUT.B228",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    },
+    {
+      "filename": "ETS0420_BIOS.C025.OUT.B228",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    },
+    {
+      "filename": "ETS27200_BIOS.C025.OUT.B228",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    },
+    {
+      "filename": "ETS30100_BIOS.C025.OUT.B228",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    },
+    {
+      "filename": "ETS50300_BIOS.C025.OUT.B228",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    },
+    {
+      "filename": "bios_socgen_out_recon",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    },
+    {
+      "filename": "bios_socgen_out_recon_data_account_list",
+      "period": [
+        {
+          "name": "END",
+          "timing": "L1"
+        },
+        {
+          "name": "MID",
+          "timing": "M1"
+        }
+      ]
+    }
+  ],
+  "inputPath": "socgen/statements/input/",
+  "filesToProcess": [
+    {
+      "filename": "BIOS.(C025).OUT.B228.ORG.(|QA.)[0-1][0-9][0-3][0-9][0-9]{10}",
+      "fileType": "",
+      "StepFunction": [
+        {
+          "name": "Convert step",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_CONVERSION",
+          "sfNextKey": "SM_ARN_VALIDATION",
+          "sfStepsToDone": {
+            "b228Conversion": {
+              "input_folder": "socgen/statements/input",
+              "config_bucket": "",
+              "config_folder": "socgen/statements/config",
+              "config_filename": "b228_config.txt",
+              "output_bucket": "",
+              "output_queue_folder": "socgen/statements/output/",
+              "header_queue_folder": "socgen/statements/wip/to_brcc_header/",
+              "hold_queue_folder": "socgen/statements/wip/to_hold/",
+              "queue_folder": "socgen/statements/wip/to_brcc_bundle/",
+              "header_input_folder": "socgen/statements/input/",
+              "thread_model": "M",
+              "thread_num": "21",
+              "batch_size": "50000",
+              "run_type": "JSON",
+              "trid_file": "trid_list.txt",
+              "b1_settings": "b1_settings.txt",
+              "file_validation": "True",
+              "account_filter": "account_filter_file.txt",
+              "s3_batchsize": "100",
+              "printSuppInd": "true"
+            }
+          }
+        },
+        {
+          "name": "Validation step",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_VALIDATION",
+          "sfNextKey": "SM_ARN_B228_FULL_CONVERT",
+          "sfStepsToDone": {
+            "jsonTotalsValidation": {
+              "total_json_file": ""
+            },
+            "ACKEmail": {
+              "recipient_emails": [
+                "Parameswaran.Lakshmanan@broadridge.com"
+              ],
+              "cc_emails": [
+                "SaiChandu.Indukuri@broadridge.com",
+                "Asaduzzaman.Roman@broadridge.com",
+                "BhanuPrakash.Reddy@broadridge.com"
+              ],
+              "subject": "",
+              "body": "",
+              "attachment_flag": false,
+              "failureMailFlag": true,
+              "object_key": "",
+              "object_prefix": "",
+              "pattern": "",
+              "skip_email_send": false,
+              "email_input_format": "",
+              "email_input_file": "",
+              "email_output_format": "",
+              "email_output_delimiter": ""
+            }
+          }
+        },
+        {
+          "name": "Full Conversion step",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_B228_FULL_CONVERT",
+          "sfNextKey": "SM_ARN_DEBATCH",
+          "sfStepsToDone": {
+            "b228FullRunConvert": {
+              "input_folder": "socgen/statements/input",
+              "config_bucket": "",
+              "config_folder": "socgen/statements/config",
+              "config_filename": "b228_config.txt",
+              "output_bucket": "",
+              "output_queue_folder": "socgen/statements/output/",
+              "header_queue_folder": "socgen/statements/wip/to_brcc_header/",
+              "hold_queue_folder": "socgen/statements/wip/to_hold/",
+              "queue_folder": "socgen/statements/wip/to_brcc_bundle/",
+              "header_input_folder": "socgen/statements/input/",
+              "thread_model": "M",
+              "thread_num": "21",
+              "batch_size": "50000",
+              "run_type": "JSON",
+              "trid_file": "trid_list.txt",
+              "b1_settings": "b1_settings.txt",
+              "file_validation": "False",
+              "account_filter": "account_filter_file.txt",
+              "s3_batchsize": "100",
+              "printSuppInd": "true"
+            }
+          }
+        },
+        {
+          "name": "Debatch",
+          "order": "4",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_DEBATCH",
+          "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfStepsToDone": {
+            "BundletoJson": {
+              "input_path": "socgen/statements/wip/to_brcc_bundle/",
+              "kafka_topic_count": "1",
+              "kafka_topic_prefix": "br.communication.socgen.stmt.brx.documents",
+              "batch_size": "50",
+              "region": "us-east-1",
+              "kafka_brokers": "b-1.brgtoftbqaftbepmmskaw9.d30es1.c3.kafka.us-east-1.amazonaws.com:9096,b-2.brgtoftbqaftbepmmskaw9.d30es1.c3.kafka.us-east-1.amazonaws.com:9096,b-3.brgtoftbqaftbepmmskaw9.d30es1.c3.kafka.us-east-1.amazonaws.com:9096,b-4.brgtoftbqaftbepmmskaw9.d30es1.c3.kafka.us-east-1.amazonaws.com:9096,b-5.brgtoftbqaftbepmmskaw9.d30es1.c3.kafka.us-east-1.amazonaws.com:9096,b-6.brgtoftbqaftbepmmskaw9.d30es1.c3.kafka.us-east-1.amazonaws.com:9096",
+              "kafka_username": "/qa/dpm/pp/socgen/kafka/username",
+              "kafka_password": "/qa/dpm/pp/socgen/kafka/password",
+              "kafka_jaas_config": "/qa/dpm/pp/socgen/kafka/jaas/config"
+            }
+          }
+        },
+        {
+          "name": "Multi File Validation table step",
+          "order": "5",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfNextKey": "SM_ARN_COPY_FILES",
+          "sfStepsToDone": {
+            "multiFileValidation": {
+              "multifileConfig": ""
+            }
+          }
+        },
+        {
+          "name": "Copy Files",
+          "order": "6",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_COPY_FILES",
+          "sfNextKey": "SM_ARN_MERGE_FILES",
+          "sfStepsToDone": {
+            "copyInfo": [
+              {
+                "source_folder": "socgen/statements/output/",
+                "destination_folder": "socgen/statements/recon_rpt/",
+                "ext_type": "recon_rpt",
+                "copy_type": "move",
+                "file_reg": "input_file"
+              },
+              {
+                "source_folder": "socgen/statements/output/",
+                "destination_folder": "socgen/statements/recon_rpt/",
+                "ext_type": "reconAccountList_rpt",
+                "copy_type": "move",
+                "file_reg": "input_file"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Merge Files",
+          "order": "7",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_MERGE_FILES",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "mergeInfo": [
+              {
+                "input_folder": "socgen/statements/recon_rpt/",
+                "output_file": "bios_socgen_out_recon_<TS>.csv",
+                "ts_format": "%m%d%Y%H%M%S",
+                "file_types": [
+                  "BIOS.C025.OUT.B228.ORG"
+                ],
+                "ext_type": "recon_rpt",
+                "destination_folder": "socgen/statements/input/",
+                "archive_folder": "socgen/statements/save/"
+              },
+              {
+                "input_folder": "socgen/statements/recon_rpt/",
+                "output_file": "bios_socgen_out_recon_data_account_list_<TS>.csv",
+                "ts_format": "%m%d%Y%H%M%S",
+                "file_types": [
+                  "BIOS.C025.OUT.B228.ORG"
+                ],
+                "ext_type": "reconAccountList_rpt",
+                "destination_folder": "socgen/statements/input/",
+                "archive_folder": "socgen/statements/save/"
+              }
+            ]
+          }
+        },
+        {
+          "name": "archival",
+          "order": "8",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(ETS0420)_BIOS.(C025).OUT.B228.ORG.(|QA.)[0-1][0-9][0-3][0-9][0-9]{10}.json",
+      "fileType": "json",
+      "StepFunction": [
+        {
+          "name": "Load to Headers to Staging table step",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfStepsToDone": {
+            "header": "True",
+            "headerStage": {
+              "object_key": "",
+              "fileName": "",
+              "table_name": "B228ETS0420CONF6",
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "base_file_name": "",
+              "columns": "{\"0420\": {\"attributes\": [{\"name\": \"04200-CC-CURR\", \"type\": \"String\", \"primary_key\": true}, {\"name\": \"04200-CC-BUY-RATE\", \"type\": \"String\"}, {\"name\": \"04200-CC-SELL-RATE\", \"type\": \"String\"}, {\"name\": \"04200-CC-AVERAGE-RATE\", \"type\": \"String\"}]}}",
+              "replica": "{\"replica_needed\": \"N\",\"replica_table_name\": \"\",\"replica_table_creation_type\": \"\"}",
+              "client_id": "0420",
+              "json_loader_path": "['B228_FILE','CLIENT_HEADER']",
+              "multiple_data": "False",
+              "database": "SocGen",
+              "schema": "AUX",
+              "identifer": "04200-CC-TABLE"
+            }
+          }
+        },
+        {
+          "name": "Multi File Validation table step",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "multiFileValidation": {
+              "multifileConfig": ""
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(ETS0422|ETS0510)_BIOS.(C025).OUT.B228.ORG.(|QA.)[0-1][0-9][0-3][0-9][0-9]{10}.json",
+      "fileType": "json",
+      "StepFunction": [
+        {
+          "name": "Conversion step",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_CONVERSION",
+          "sfNextKey": "SM_ARN_LOADSTAGE",
+          "sfStepsToDone": {
+            "b228HeaderPrep": {
+              "header_input_json": "",
+              "header_output_json": "",
+              "config": {
+                "ETS0510": {
+                  "client_header_hierarchy": "data['B228_FILE']['CLIENT_HEADER'][0]",
+                  "client_header_field": "'ETS0510'"
+                },
+                "ETS0422": {
+                  "client_header_hierarchy": "data['B228_FILE']['CLIENT_HEADER'][0]",
+                  "client_header_field": "'ETS0422'"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Load to Staging table step",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "LoadStage": {
+              "key": "0",
+              "batch_size": "1000",
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "base_file_name": "ETS0510_BIOS.C025.OUT|ETS0422_BIOS.C025.OUT",
+              "key_location": {
+                "ETS0510_BIOS.C025.OUT": {
+                  "key_index": "10",
+                  "retention_days": "150",
+                  "database": "SocGen",
+                  "schema": "AUX"
+                },
+                "ETS0422_BIOS.C025.OUT": {
+                  "key_index": "147",
+                  "retention_days": "150",
+                  "database": "SocGen",
+                  "schema": "AUX"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(ETS50300|ETS30100|ETS27200)_BIOS.(C025).OUT.B228.ORG.(|QA.)[0-1][0-9][0-3][0-9][0-9]{10}",
+      "fileType": "",
+      "StepFunction": [
+        {
+          "name": "Conversion step",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_CONVERSION",
+          "sfNextKey": "SM_ARN_LOADSTAGE",
+          "sfStepsToDone": {
+            "delimitedtojson": {
+              "delimiter": "||",
+              "config": {
+                "ETS50300": {
+                  "unique_key": "KEY",
+                  "header_identifiers": [
+                    "KEY"
+                  ],
+                  "trailer_identifiers": [
+                    "TRAILER"
+                  ]
+                },
+                "ETS30100": {
+                  "unique_key": "KEY",
+                  "header_identifiers": [
+                    "KEY"
+                  ],
+                  "trailer_identifiers": [
+                    "TRAILER"
+                  ]
+                },
+                "ETS27200": {
+                  "unique_key": "KEY",
+                  "header_identifiers": [
+                    "KEY"
+                  ],
+                  "trailer_identifiers": [
+                    "TRAILER"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Load to Staging table step",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfStepsToDone": {
+            "LoadStage": {
+              "key": "0",
+              "batch_size": "1000",
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "base_file_name": "ETS50300_BIOS.C025.OUT|ETS30100_BIOS.C025.OUT|ETS27200_BIOS.C025.OUT",
+              "key_location": {
+                "ETS50300_BIOS.C025.OUT": {
+                  "key_index": "0",
+                  "retention_days": "150",
+                  "database": "SocGen",
+                  "schema": "AUX"
+                },
+                "ETS30100_BIOS.C025.OUT": {
+                  "key_index": "0",
+                  "retention_days": "150",
+                  "database": "SocGen",
+                  "schema": "AUX"
+                },
+                "ETS27200_BIOS.C025.OUT": {
+                  "key_index": "0",
+                  "retention_days": "150",
+                  "database": "SocGen",
+                  "schema": "AUX"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Multi File Validation table step",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "multiFileValidation": {
+              "multifileConfig": ""
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "4",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(bios_socgen_out_recon|bios_socgen_out_recon_data_account_list)_[0-1][0-9][0-3][0-9][0-9]{10}.csv",
+      "fileType": "csv",
+      "StepFunction": [
+        {
+          "name": "CSV Load to Table",
+          "order": "1",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfStepsToDone": {
+            "header": "true",
+            "csvLoadStage": {
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "region": "us-east-1",
+              "key_location": {
+                "bios_socgen_out_recon": {
+                  "delimiter": ",",
+                  "table_name": "bios_socgen_out_recon",
+                  "database": "SocGen",
+                  "mode": "truncate",
+                  "schema": "public"
+                },
+                "bios_socgen_out_recon_data_account_list": {
+                  "delimiter": ",",
+                  "table_name": "bios_socgen_out_recon_data_account_list",
+                  "database": "SocGen",
+                  "mode": "truncate",
+                  "schema": "public"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Multi File Validation table step",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_MULTIFILE_VALIDATION",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "multiFileValidation": {
+              "multifileConfig": ""
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(countrycode|currencycode|b1cardsection)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].csv",
+      "fileType": "csv",
+      "StepFunction": [
+        {
+          "name": "Delimited Load Load to Staging table step",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "header": "True",
+            "delimitedLoadStage": {
+              "batch_size": "1000",
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "region": "us-east-1",
+              "base_file_name": "countrycode|currencycode|b1cardsection",
+              "key_location": {
+                "countrycode": {
+                  "delimiter": ",",
+                  "retention_days": "150",
+                  "table_name": "countrycode",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                },
+                "currencycode": {
+                  "delimiter": ",",
+                  "retention_days": "150",
+                  "table_name": "currencycode",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                },
+                "b1cardsection": {
+                  "delimiter": ",",
+                  "retention_days": "150",
+                  "table_name": "b1cardsection",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(SOCGEN|WFS)STATEMENT_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].(?:starttask|failed|success)$",
+      "fileType": "txt",
+      "StepFunction": [
+        {
+          "name": "Brx Trigger",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_BRXTRIGGERSFN",
+          "sfNextKey": "",
+          "sfStepsToDone": {
+            "brxTrigger": {
+              "input_file": "socgen/statements/input/",
+              "TASK_LIST": [
+                {
+                  "cluster": "br_icsqa_dpmuev1_app_ecs_cluster",
+                  "task_definition": "br_icsqa_dpmuev1_director_core_socgen_A",
+                  "container_name": "director_core_b228"
+                },
+                {
+                  "cluster": "br_icsqa_dpmuev1_app_ecs_cluster",
+                  "task_definition": "br_icsqa_dpmuev1_director_core_socgen_B",
+                  "container_name": "director_core_b228"
+                },
+                {
+                  "cluster": "br_icsqa_dpmuev1_app_ecs_cluster",
+                  "task_definition": "br_icsqa_dpmuev1_director_core_socgen_C",
+                  "container_name": "director_core_b228"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(SOCGENSTATEMENT)_(|QUATEREND)(|MONTHEND)(|MIDMONTH)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].trigger",
+      "fileType": "txt",
+      "StepFunction": [
+        {
+          "name": "metadataextraction",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_METADATAEXTRACTION",
+          "sfNextKey": "SM_ARN_STATEMENTDATAEXTRACTION",
+          "sfStepsToDone": {
+            "extractmetadata": {
+              "wipPath": "socgen/statements/wip",
+              "accountsOutputFile": "accounts_list",
+              "outputFileType": "json",
+              "sql_queries": {
+                "columns_list": "partyid_list, partyidentifiervalue_list",
+                "limit": 20,
+                "metadata_query": "SELECT * FROM get_account_metadata({account_numbers}::TEXT[])",
+                "create_base_historical_tables": "SELECT create_base_historical_tables()",
+                "create_historical_table": "SELECT create_historical_table('{historicaltablename}', '{schemaname}')",
+                "create_staging_table": "SELECT create_staging_table('{stagingtablename}', '{schemaname}')"
+              },
+              "tableInfo": {
+                "region": "us-east-1",
+                "dbkey": "/dpmuev1/qa/database-secret",
+                "dbname": "SocGen",
+                "schema": "public"
+              }
+            }
+          }
+        },
+        {
+          "name": "statementdataextraction",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "False",
+          "clientType": "type1",
+          "sfKey": "SM_ARN_STATEMENTDATAEXTRACTION",
+          "sfNextKey": "SM_ARN_DRIVERCREATION",
+          "sfStepsToDone": {
+            "extractaccounts": {
+              "bucket": "",
+              "inputFile": "",
+              "sql_queries": {
+                "columns_list": "partyid, partyidentifiervalue",
+                "party": "SELECT * FROM get_party_details(ARRAY[{party_ids}]::INTEGER[])",
+                "communication": "SELECT extract_communication_data('{partyid}','{clientidentifier}')",
+                "transaction": "SELECT create_json_for_extraction('{partyid}','{clientidentifier}','{historicaltablename}')",
+                "update_recon_table": "SELECT update_recon_table((:accountinfo)::json)",
+                "get_statement_date": "SELECT data FROM temp_extraction_results WHERE currency IS NULL AND sectionheader = 'Statement Date' LIMIT 1;",
+                "get_section_list": "SELECT currency, sectiontype, sectionheader FROM (SELECT DISTINCT currency, sectiontype, sectionheader FROM temp_extraction_results WHERE currency IS NOT NULL AND sectionheader != 'Multi-currency Account Net Equity') AS t ORDER BY CASE WHEN currency = 'USD' THEN 0 ELSE 1 END, currency, sectiontype, sectionheader;",
+                "get_section_data": "SELECT data FROM temp_extraction_results WHERE currency = '{currency}' AND sectiontype = '{sectiontype}' AND sectionheader = '{sectionheader}' ORDER BY {order_by};",
+                "combinations": [
+                  {
+                    "category": "025",
+                    "rules": [
+                      {
+                        "field": "party_clientid",
+                        "operator": "in",
+                        "values": [
+                          "025"
+                        ]
+                      }
+                    ],
+                    "base_filename": "SOCGEN_STMT_{mmddyyyy}_BPS_{timestamp}_P"
+                  }
+                ]
+              },
+              "formats": {
+                "date": [
+                  {
+                    "type1": {
+                      "format": "%B %d, %Y"
+                    },
+                    "type2": {
+                      "format": "%B %Y"
+                    },
+                    "type3": {
+                      "format": "%m/%d/%Y"
+                    }
+                  }
+                ],
+                "currency": [
+                  {
+                    "type1": {
+                      "format": "${:,.2f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "$0.00"
+                    }
+                  },
+                  {
+                    "type2": {
+                      "format": "${:,.3f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "$0.00"
+                    }
+                  },
+                  {
+                    "type3": {
+                      "format": "${:,.7f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "$0.00"
+                    }
+                  },
+                  {
+                    "type4": {
+                      "format": "{:,.7f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": ""
+                    }
+                  }
+                ],
+                "decimal": [
+                  {
+                    "type1": {
+                      "format": "{:,.2f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  },
+                  {
+                    "type2": {
+                      "format": "{:,.3f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  },
+                  {
+                    "type3": {
+                      "format": "{:,.7f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  },
+                  {
+                    "type4": {
+                      "format": "{:,.7f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": ""
+                    }
+                  },
+                  {
+                    "type5": {
+                      "format": "{:,.4f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "N/A"
+                    }
+                  },
+                  {
+                    "type6": {
+                      "format": "{:,.2f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "†††"
+                    }
+                  },
+                  {
+                    "type7": {
+                      "format": "{:,.12f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  },
+                  {
+                    "type8": {
+                      "format": "{:,.5f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  },
+                  {
+                    "type9": {
+                      "format": "{:,.4f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  },
+                  {
+                    "type10": {
+                      "format": "{:,.5f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": ""
+                    }
+                  },
+                  {
+                    "type11": {
+                      "format": "{:,.2f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": ""
+                    }
+                  },
+                  {
+                    "type12": {
+                      "format": "{:,.8f}",
+                      "negativeSignFormat": "signEnclosed",
+                      "default": "0.00"
+                    }
+                  }
+                ]
+              },
+              "driverlayout": [
+                {
+                  "customer": {
+                    "household_flag": "",
+                    "run_type": "",
+                    "documents": [
+                      {
+                        "document": {
+                          "document_info": {},
+                          "doc_nops": {},
+                          "ur_attributes": {},
+                          "campaign_manager": {
+                            "cm_pick_fields": {},
+                            "user_variables": {}
+                          },
+                          "primary_logo": "primary_logo",
+                          "document_date": "",
+                          "return_address": [],
+                          "customer_mailing_address": [],
+                          "advisor_info": [],
+                          "document_heading": [],
+                          "interested_party_info": [],
+                          "duplicate_copies": [],
+                          "details": [
+                            {
+                              "summary": [],
+                              "holdings": [],
+                              "transactions": []
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "doc_nops": {
+                    "doc_account_number": "doc_account_number",
+                    "doc_insert_combo": "doc_insert_combo",
+                    "doc_product_code": "doc_product_code",
+                    "doc_special_handling_code": "doc_special_handling_code",
+                    "doc_total_amount_due_sign": "doc_total_amount_due_sign",
+                    "doc_total_amount_due": "",
+                    "doc_send_addr_line1": "doc_send_addr_line1",
+                    "doc_send_addr_line2": "doc_send_addr_line2",
+                    "doc_send_addr_line3": "doc_send_addr_line3",
+                    "doc_send_addr_line4": "doc_send_addr_line4",
+                    "doc_send_addr_line5": "doc_send_addr_line5",
+                    "doc_send_addr_line6": "doc_send_addr_line6",
+                    "doc_send_addr_zip_code": "doc_send_addr_zip_code",
+                    "doc_city": "doc_city",
+                    "doc_state": "doc_state",
+                    "doc_country": "doc_country"
+                  },
+                  "ur_attributes": {
+                    "uc_account_number": "UC_ACCOUNT_NUMBER",
+                    "uc_customer_number": "UC_CUSTOMER_NUMBER",
+                    "uc_account_type": "UC_ACCOUNT_TYPE",
+                    "uc_delivery_indicator": "UC_DELIVERY_INDICATOR",
+                    "uc_user_id": "UC_USER_ID",
+                    "uc_mail_type": "UC_MAIL_TYPE",
+                    "uc_customer_name": "UC_CUSTOMER_NAME",
+                    "uc_combined_indicator": "UC_COMBINED_INDICATOR",
+                    "uc_corp": "UC_CORP",
+                    "uc_entity": "uc_entity",
+                    "uc_document_date": "UC_DOCUMENT_DATE"
+                  },
+                  "user_variables": {
+                    "user_text_variable_1": "ClientID_PickField",
+                    "user_text_variable_2": "Branch_PickField",
+                    "user_text_variable_3": "AccountName_PickField",
+                    "user_text_variable_4": "IntroBroker_PickField",
+                    "user_text_variable_5": "AddressType_PickField",
+                    "user_text_variable_6": "AddressFormatInd_PickField",
+                    "user_text_variable_7": "Country_PickField",
+                    "user_text_variable_8": "Statement_PickField",
+                    "user_text_variable_9": "P3External_PickField",
+                    "user_text_variable_10": "",
+                    "user_text_variable_11": "",
+                    "user_text_variable_12": "",
+                    "user_text_variable_13": "",
+                    "user_text_variable_14": "",
+                    "user_text_variable_15": "",
+                    "user_text_variable_16": "",
+                    "user_text_variable_17": "",
+                    "user_text_variable_18": "",
+                    "user_text_variable_19": "",
+                    "user_text_variable_20": "",
+                    "user_text_variable_21": "",
+                    "user_text_variable_22": "",
+                    "user_text_variable_23": "",
+                    "user_text_variable_24": "",
+                    "user_text_variable_25": "",
+                    "user_text_variable_26": "",
+                    "user_text_variable_27": "",
+                    "user_text_variable_28": "",
+                    "user_text_variable_29": "",
+                    "user_text_variable_30": ""
+                  },
+                  "household": {
+                    "household_logo": "",
+                    "return_address": [],
+                    "household_mailing_address": [],
+                    "household_heading": "",
+                    "household_account_info": [],
+                    "household_summary": []
+                  },
+                  "document_info": {
+                    "sequence": "",
+                    "type": "",
+                    "category": "",
+                    "parent_id": "party_parentid",
+                    "id": "party_id",
+                    "party_idvalue": "party_identifiervalue",
+                    "account_number": "party_identifierreference",
+                    "master_account": "",
+                    "sister_accounts": "",
+                    "household_type": "party_type",
+                    "is_interested_party": "",
+                    "account_type": "party_type",
+                    "client_id": "party_clientid",
+                    "branch_number": "",
+                    "amount_due": "",
+                    "salutation": "",
+                    "first_name": "party_firstname",
+                    "middle_name": "",
+                    "last_name": "party_lastname",
+                    "full_name": "party_fullname",
+                    "activity_date": "BeginningDate",
+                    "legal_id": "LegalId",
+                    "address_id": "AddressId",
+                    "address_type": "AddressType"
+                  },
+                  "cm_pick_fields": {
+                    "client_id": "ClientID_PickField",
+                    "branch": "Branch_PickField",
+                    "account_name": "AccountName_PickField",
+                    "intro_broker": "IntroBroker_PickField",
+                    "address_type": "AddressType_PickField",
+                    "address_format_ind": "AddressFormatInd_PickField",
+                    "country": "Country_PickField",
+                    "statement": "Statement_PickField",
+                    "p2external": "P3External_PickField"
+                  },
+                  "customer_mailing_address": [
+                    {
+                      "column1": "party_mailing_name"
+                    },
+                    {
+                      "column1": "party_addressline1"
+                    },
+                    {
+                      "column1": "party_addressline2"
+                    },
+                    {
+                      "column1": "party_addressline3"
+                    },
+                    {
+                      "column1": "party_addressline4"
+                    },
+                    {
+                      "column1": "party_addressline5"
+                    },
+                    {
+                      "column1": "party_addressline6"
+                    }
+                  ],
+                  "advisor_info": [
+                    {
+                      "column1": "financialadvisor_name_1"
+                    },
+                    {
+                      "column1": "financialadvisor_name_2"
+                    },
+                    {
+                      "column1": "financialadvisor_officetelephone"
+                    }
+                  ],
+                  "document_heading": [
+                    {
+                      "column1": "statement_date_mmmyyyy"
+                    },
+                    {
+                      "column1": "statement_period_mmmddyyyy"
+                    },
+                    {
+                      "column1": "statement_account"
+                    }
+                  ],
+                  "interested_party_info": [
+                    {
+                      "column1": "party_mailing_name"
+                    },
+                    {
+                      "column1": "party_addressline1"
+                    },
+                    {
+                      "column1": "party_addressline2"
+                    },
+                    {
+                      "column1": "party_addressline3"
+                    },
+                    {
+                      "column1": "party_addressline4"
+                    },
+                    {
+                      "column1": "party_addressline5"
+                    },
+                    {
+                      "column1": "party_addressline6"
+                    }
+                  ],
+                  "detail_record": {
+                    "heading_1": "",
+                    "heading_2": "",
+                    "section_level_indicator": "",
+                    "sub_heading_1": "",
+                    "sub_heading_2": "",
+                    "sub_detail_row_indicator": "",
+                    "reference_table_name": "",
+                    "sub_detail_column_values": []
+                  },
+                  "template": {
+                    "Template": {
+                      "RecType": {
+                        "Type1": [
+                          {
+                            "Date": [
+                              [
+                                "Statement Date",
+                                "statement_date_mmmyyyy",
+                                "{party_entity} Account Statement for {EndingDate}",
+                                [
+                                  {
+                                    "field": "party_entity",
+                                    "format": ""
+                                  },
+                                  {
+                                    "field": "EndingDate",
+                                    "format": "date.type2"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Statement Period",
+                                "statement_period_mmmddyyyy",
+                                "{BeginningDate}-{EndingDate}",
+                                [
+                                  {
+                                    "field": "BeginningDate",
+                                    "format": "date.type1"
+                                  },
+                                  {
+                                    "field": "EndingDate",
+                                    "format": "date.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Statement Account",
+                                "statement_account",
+                                "{party_name} Account {party_identifierreference}",
+                                [
+                                  {
+                                    "field": "party_name",
+                                    "format": ""
+                                  },
+                                  {
+                                    "field": "party_identifierreference",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type2": [
+                          {
+                            "Detail": [
+                              [
+                                "Security ID",
+                                "column_1_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_2_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Account Type",
+                                "column_3_value_1",
+                                "{transactioncategory}",
+                                [
+                                  {
+                                    "field": "transactioncategory",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type3": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type4": [
+                          {
+                            "Detail": [
+                              [
+                                "Security ID",
+                                "column_1_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_2_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Account Type",
+                                "column_3_value_1",
+                                "{transactioncategory}",
+                                [
+                                  {
+                                    "field": "transactioncategory",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Maturity Date",
+                                "column_4_value_1",
+                                "{MaturityDate}",
+                                [
+                                  {
+                                    "field": "MaturityDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Coupon Rate",
+                                "column_4_value_2",
+                                "{RateType}",
+                                [
+                                  {
+                                    "field": "RateType",
+                                    "format": "decimal.type7"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{PrimaryQuantity}",
+                                [
+                                  {
+                                    "field": "PrimaryQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Current Face",
+                                "column_5_value_2",
+                                "{CouponInterestAmount}",
+                                [
+                                  {
+                                    "field": "CouponInterestAmount",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Price",
+                                "column_6_value_1",
+                                "{MarketPrice}",
+                                [
+                                  {
+                                    "field": "MarketPrice",
+                                    "format": "decimal.type5"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_2",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type6"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity Pledged",
+                                "column_7_value_1",
+                                "{OutstandingStockQuantity}",
+                                [
+                                  {
+                                    "field": "OutstandingStockQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type5": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{TotalNumberofSecurities}",
+                                [
+                                  {
+                                    "field": "TotalNumberofSecurities",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Current Face",
+                                "column_5_value_2",
+                                "{AccruedCouponInterest}",
+                                [
+                                  {
+                                    "field": "AccruedCouponInterest",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity Pledged",
+                                "column_7_value_1",
+                                "{TotalOutstandingStockQuantity}",
+                                [
+                                  {
+                                    "field": "TotalOutstandingStockQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type6": [
+                          {
+                            "Detail": [
+                              [
+                                "Security ID",
+                                "column_1_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_2_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Account Type",
+                                "column_3_value_1",
+                                "{transactioncategory}",
+                                [
+                                  {
+                                    "field": "transactioncategory",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_4_value_1",
+                                "{PrimaryQuantity}",
+                                [
+                                  {
+                                    "field": "PrimaryQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Price",
+                                "column_5_value_1",
+                                "{MarketPrice}",
+                                [
+                                  {
+                                    "field": "MarketPrice",
+                                    "format": "decimal.type5"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type6"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity Pledged",
+                                "column_7_value_1",
+                                "{OutstandingStockQuantity}",
+                                [
+                                  {
+                                    "field": "OutstandingStockQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type7": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_4_value_1",
+                                "{TotalNumberofSecurities}",
+                                [
+                                  {
+                                    "field": "TotalNumberofSecurities",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity Pledged",
+                                "column_7_value_1",
+                                "{TotalOutstandingStockQuantity}",
+                                [
+                                  {
+                                    "field": "TotalOutstandingStockQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type8": [
+                          {
+                            "Detail": [
+                              [
+                                "Security ID",
+                                "column_1_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_2_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Account Type",
+                                "column_3_value_1",
+                                "{transactioncategory}",
+                                [
+                                  {
+                                    "field": "transactioncategory",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Beginning Share Balance",
+                                "column_4_value_1",
+                                "{BeginQuantity}",
+                                [
+                                  {
+                                    "field": "BeginQuantity",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "End Share Balance",
+                                "column_4_value_2",
+                                "{PrimaryQuantity}",
+                                [
+                                  {
+                                    "field": "PrimaryQuantity",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Beginning Price",
+                                "column_5_value_1",
+                                "{BeginPrice}",
+                                [
+                                  {
+                                    "field": "BeginPrice",
+                                    "format": "decimal.type9"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "End Price",
+                                "column_5_value_2",
+                                "{MarketPrice}",
+                                [
+                                  {
+                                    "field": "MarketPrice",
+                                    "format": "decimal.type9"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Beginning Market Val",
+                                "column_6_value_1",
+                                "{BeginMarketValue}",
+                                [
+                                  {
+                                    "field": "BeginMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "End Market Val",
+                                "column_6_value_2",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type9": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Beginning Market Val",
+                                "column_6_value_1",
+                                "{AssetClassTotalBeginningValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalBeginningValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "End Market Val",
+                                "column_6_value_2",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type10": [
+                          {
+                            "Detail": [
+                              [
+                                "Settlement Date",
+                                "column_1_value_1",
+                                "{SettlementDate}",
+                                [
+                                  {
+                                    "field": "SettlementDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Trade Date",
+                                "column_1_value_2",
+                                "{TransactionDate}",
+                                [
+                                  {
+                                    "field": "TransactionDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction",
+                                "column_2_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Security ID",
+                                "column_4_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{UnderlyingQuantity}",
+                                [
+                                  {
+                                    "field": "UnderlyingQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Price",
+                                "column_5_value_2",
+                                "{OrderPrice}",
+                                [
+                                  {
+                                    "field": "OrderPrice",
+                                    "format": "decimal.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal",
+                                "column_6_value_1",
+                                "{Principal}",
+                                [
+                                  {
+                                    "field": "Principal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Interest",
+                                "column_6_value_2",
+                                "{Interest}",
+                                [
+                                  {
+                                    "field": "Interest",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction Amount",
+                                "column_7_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type11": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Principal",
+                                "column_6_value_1",
+                                "{PriceAssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "PriceAssetClassTotalValue",
+                                    "format": "decimal.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction Amount",
+                                "column_7_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type12": [
+                          {
+                            "Purchase": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Purchases Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Transaction Amount",
+                                "column_7_value_1",
+                                "{TotalDebit}",
+                                [
+                                  {
+                                    "field": "TotalDebit",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          },
+                          {
+                            "Sell": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Sales Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Transaction Amount",
+                                "column_7_value_1",
+                                "{TotalCredit}",
+                                [
+                                  {
+                                    "field": "TotalCredit",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type13": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{SettlementDate}",
+                                [
+                                  {
+                                    "field": "SettlementDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction",
+                                "column_2_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Credit",
+                                "column_6_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {
+                                  "check": "greater",
+                                  "field": "NetAmount"
+                                }
+                              ],
+                              [
+                                "Debit",
+                                "column_7_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {
+                                  "check": "lesserthanequal",
+                                  "field": "NetAmount"
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type14": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Credit",
+                                "column_6_value_1",
+                                "{TotalCredit}",
+                                [
+                                  {
+                                    "field": "TotalCredit",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Debit",
+                                "column_7_value_1",
+                                "{TotalDebit}",
+                                [
+                                  {
+                                    "field": "TotalDebit",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type15": [
+                          {
+                            "Detail": [
+                              [
+                                "Currency",
+                                "column_1_value_1",
+                                "{currency}",
+                                [
+                                  {
+                                    "field": "currency",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Net Cash Balance",
+                                "column_2_value_1",
+                                "{NetCashBalance}",
+                                [
+                                  {
+                                    "field": "NetCashBalance",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Long Market Value",
+                                "column_3_value_1",
+                                "{LongMarketValue}",
+                                [
+                                  {
+                                    "field": "LongMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Short Market Value",
+                                "column_4_value_1",
+                                "{ShortMarketValue}",
+                                [
+                                  {
+                                    "field": "ShortMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "CCY Net Equity",
+                                "column_5_value_1",
+                                "{NetEquityinDenominationCurrency}",
+                                [
+                                  {
+                                    "field": "NetEquityinDenominationCurrency",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "CCY Rate",
+                                "column_5_value_2",
+                                "{ExchangeRate}",
+                                [
+                                  {
+                                    "field": "ExchangeRate",
+                                    "format": "decimal.type12"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "USD Net Equity",
+                                "column_6_value_1",
+                                "{NetEquityInUSD}",
+                                [
+                                  {
+                                    "field": "NetEquityInUSD",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type16": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "USD Net Equity",
+                                "column_6_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type17": [
+                          {
+                            "Detail": [
+                              [
+                                "Classification",
+                                "column_1_value_1",
+                                "{classification}",
+                                [
+                                  {
+                                    "field": "classification",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_2_value_1",
+                                "{thisperiod}",
+                                [
+                                  {
+                                    "field": "thisperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_3_value_1",
+                                "{ytdperiod}",
+                                [
+                                  {
+                                    "field": "ytdperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type18": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_2_value_1",
+                                "{thisperiodtotal}",
+                                [
+                                  {
+                                    "field": "thisperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_3_value_1",
+                                "{ytdperiodtotal}",
+                                [
+                                  {
+                                    "field": "ytdperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type19": [
+                          {
+                            "Detail": [
+                              [
+                                "Classification",
+                                "column_1_value_1",
+                                "{classification}",
+                                [
+                                  {
+                                    "field": "classification",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_2_value_1",
+                                "{previousperiod}",
+                                [
+                                  {
+                                    "field": "previousperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_3_value_1",
+                                "{thisperiod}",
+                                [
+                                  {
+                                    "field": "thisperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Year-To-Date",
+                                "column_6_value_1",
+                                "{ytdperiod}",
+                                [
+                                  {
+                                    "field": "ytdperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type20": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_4_value_1",
+                                "{previousperiodtotal}",
+                                [
+                                  {
+                                    "field": "previousperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_5_value_1",
+                                "{thisperiodtotal}",
+                                [
+                                  {
+                                    "field": "thisperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Year-To-Date",
+                                "column_6_value_1",
+                                "{ytdperiodtotal}",
+                                [
+                                  {
+                                    "field": "ytdperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type21": [
+                          {
+                            "Detail": [
+                              [
+                                "Classification",
+                                "column_1_value_1",
+                                "{classification}",
+                                [
+                                  {
+                                    "field": "classification",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_6_value_1",
+                                "{thisperiod}",
+                                [
+                                  {
+                                    "field": "thisperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type37": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Classification",
+                                "column_1_value_1",
+                                "{classification}",
+                                [
+                                  {
+                                    "field": "classification",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_6_value_1",
+                                "{thisperiod}",
+                                [
+                                  {
+                                    "field": "thisperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type22": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{TransactionDate}",
+                                [
+                                  {
+                                    "field": "TransactionDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction",
+                                "column_2_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Security ID",
+                                "column_4_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{UnderlyingQuantity}",
+                                [
+                                  {
+                                    "field": "UnderlyingQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Price",
+                                "column_5_value_2",
+                                "{OrderPrice}",
+                                [
+                                  {
+                                    "field": "OrderPrice",
+                                    "format": "decimal.type4"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Credit",
+                                "column_6_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {
+                                  "check": "greater",
+                                  "field": "NetAmount"
+                                }
+                              ],
+                              [
+                                "Debit",
+                                "column_7_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {
+                                  "check": "lesserthanequal",
+                                  "field": "NetAmount"
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type23": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{SettlementDate}",
+                                [
+                                  {
+                                    "field": "SettlementDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction",
+                                "column_2_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Security ID",
+                                "column_4_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{UnderlyingQuantity}",
+                                [
+                                  {
+                                    "field": "UnderlyingQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Credit",
+                                "column_6_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {
+                                  "check": "greater",
+                                  "field": "NetAmount"
+                                }
+                              ],
+                              [
+                                "Debit",
+                                "column_7_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {
+                                  "check": "lesserthanequal",
+                                  "field": "NetAmount"
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type24": [
+                          {
+                            "Detail": [
+                              [
+                                "Maturity Date",
+                                "column_1_value_1",
+                                "{MaturityDate}",
+                                [
+                                  {
+                                    "field": "MaturityDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "CUSIP",
+                                "column_2_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Original Par Pledged",
+                                "column_4_value_1",
+                                "{PrimaryQuantity}",
+                                [
+                                  {
+                                    "field": "PrimaryQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Current Par Pledged",
+                                "column_5_value_1",
+                                "{OutstandingStockQuantity}",
+                                [
+                                  {
+                                    "field": "OutstandingStockQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value of Pleged",
+                                "column_6_value_1",
+                                "{CouponInterestAmount}",
+                                [
+                                  {
+                                    "field": "CouponInterestAmount",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Pledge and Held For Detail",
+                                "column_7_value_1",
+                                "Pledged To {AdditionalNarrative}",
+                                [
+                                  {
+                                    "field": "AdditionalNarrative",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type25": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Original Par Pledged",
+                                "column_4_value_1",
+                                "{TotalNumberofSecurities}",
+                                [
+                                  {
+                                    "field": "TotalNumberofSecurities",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Current Par Pledged",
+                                "column_5_value_1",
+                                "{TotalOutstandingStockQuantity}",
+                                [
+                                  {
+                                    "field": "TotalOutstandingStockQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value of Pledge",
+                                "column_6_value_1",
+                                "{AccruedCouponInterest}",
+                                [
+                                  {
+                                    "field": "AccruedCouponInterest",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type26": [
+                          {
+                            "Detail": [
+                              [
+                                "Date",
+                                "column_1_value_1",
+                                "{TransactionDate}",
+                                [
+                                  {
+                                    "field": "TransactionDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_2_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{PrimaryQuantity}",
+                                [
+                                  {
+                                    "field": "PrimaryQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Rate",
+                                "column_6_value_1",
+                                "{ReferenceRate}",
+                                [
+                                  {
+                                    "field": "ReferenceRate",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Amount",
+                                "column_7_value_1",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type27": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Amount",
+                                "column_7_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type28": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{SettlementDate}",
+                                [
+                                  {
+                                    "field": "SettlementDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Activity",
+                                "column_3_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal",
+                                "column_4_value_1",
+                                "{UnderlyingQuantity}",
+                                [
+                                  {
+                                    "field": "UnderlyingQuantity",
+                                    "format": "decimal.type10"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Interest",
+                                "column_5_value_1",
+                                "{Interest}",
+                                [
+                                  {
+                                    "field": "Interest",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal Balance",
+                                "column_7_value_1",
+                                "{CurrentQuantity}",
+                                [
+                                  {
+                                    "field": "CurrentQuantity",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type29": [
+                          {
+                            "Detail": [
+                              [
+                                "Y",
+                                "sub_section_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Deposit Name",
+                                "column_3_value_1",
+                                "{ShortName}",
+                                [
+                                  {
+                                    "field": "ShortName",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Security ID",
+                                "column_4_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Interest Rate",
+                                "column_5_value_1",
+                                "{InterestRate}",
+                                [
+                                  {
+                                    "field": "InterestRate",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type30": [
+                          {
+                            "Detail": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Beginning Balance",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{BeginningBalanceMarketValue}",
+                                [
+                                  {
+                                    "field": "BeginningBalanceMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal Balance",
+                                "column_7_value_1",
+                                "{BeginningBalancePrincipalBalance}",
+                                [
+                                  {
+                                    "field": "BeginningBalancePrincipalBalance",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type31": [
+                          {
+                            "Detail": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Ending Balance",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Interest",
+                                "column_5_value_1",
+                                "{EndingBalanceInterest}",
+                                [
+                                  {
+                                    "field": "EndingBalanceInterest",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{EndingBalanceMarketValue}",
+                                [
+                                  {
+                                    "field": "EndingBalanceMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal Balance",
+                                "column_7_value_1",
+                                "{EndingBalancePrincipalBalance}",
+                                [
+                                  {
+                                    "field": "EndingBalancePrincipalBalance",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type32": [
+                          {
+                            "Detail": [
+                              [
+                                "Y",
+                                "sub_section_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Payment Method",
+                                "column_1_value_1",
+                                "{GeneralNarrative}",
+                                [
+                                  {
+                                    "field": "GeneralNarrative",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type33": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "sub_section_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Deposit Name",
+                                "column_3_value_1",
+                                "{ShortName}",
+                                [
+                                  {
+                                    "field": "ShortName",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Security ID",
+                                "column_4_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "7 day simple yield",
+                                "column_5_value_1",
+                                "{InterestRate}",
+                                [
+                                  {
+                                    "field": "InterestRate",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Beginning Price",
+                                "column_6_value_1",
+                                "{BeginPrice}",
+                                [
+                                  {
+                                    "field": "BeginPrice",
+                                    "format": "decimal.type9"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Ending Price",
+                                "column_7_value_1",
+                                "{OrderPrice}",
+                                [
+                                  {
+                                    "field": "OrderPrice",
+                                    "format": "decimal.type5"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type34": [
+                          {
+                            "Detail": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Beginning Balance",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{BeginningBalanceMarketValue}",
+                                [
+                                  {
+                                    "field": "BeginningBalanceMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal Balance",
+                                "column_7_value_1",
+                                "{BeginningBalancePrincipalBalance}",
+                                [
+                                  {
+                                    "field": "BeginningBalancePrincipalBalance",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type35": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{SettlementDate}",
+                                [
+                                  {
+                                    "field": "SettlementDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Activity",
+                                "column_3_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Shares",
+                                "column_4_value_1",
+                                "{UnderlyingQuantity}",
+                                [
+                                  {
+                                    "field": "UnderlyingQuantity",
+                                    "format": "decimal.type10"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Dividend Amount",
+                                "column_5_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type11"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal Balance",
+                                "column_7_value_1",
+                                "{CurrentQuantity}",
+                                [
+                                  {
+                                    "field": "CurrentQuantity",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type36": [
+                          {
+                            "Detail": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Ending Balance",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Dividend Amount",
+                                "column_5_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{EndingBalanceMarketValue}",
+                                [
+                                  {
+                                    "field": "EndingBalanceMarketValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Principal Balance",
+                                "column_7_value_1",
+                                "{EndingBalancePrincipalBalance}",
+                                [
+                                  {
+                                    "field": "EndingBalancePrincipalBalance",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type38": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{SettlementDate}",
+                                [
+                                  {
+                                    "field": "SettlementDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction",
+                                "column_2_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Security ID",
+                                "column_4_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_5_value_1",
+                                "{UnderlyingQuantity}",
+                                [
+                                  {
+                                    "field": "UnderlyingQuantity",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Price",
+                                "column_6_value_1",
+                                "{OrderPrice}",
+                                [
+                                  {
+                                    "field": "OrderPrice",
+                                    "format": "decimal.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction Amount",
+                                "column_7_value_1",
+                                "{NetAmount}",
+                                [
+                                  {
+                                    "field": "NetAmount",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type39": [
+                          {
+                            "Detail": [
+                              [
+                                "Transaction Date",
+                                "column_1_value_1",
+                                "{TransactionDate}",
+                                [
+                                  {
+                                    "field": "TransactionDate",
+                                    "format": "date.type3"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Transaction",
+                                "column_2_value_1",
+                                "{TransactionDescription}",
+                                [
+                                  {
+                                    "field": "TransactionDescription",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_3_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Credit",
+                                "column_6_value_1",
+                                "{NetAmountCredit}",
+                                [
+                                  {
+                                    "field": "NetAmountCredit",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Debit",
+                                "column_7_value_1",
+                                "{NetAmountDebit}",
+                                [
+                                  {
+                                    "field": "NetAmountDebit",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type40": [
+                          {
+                            "Detail": [
+                              [
+                                "Security ID",
+                                "column_1_value_1",
+                                "{ADPNumber}",
+                                [
+                                  {
+                                    "field": "ADPNumber",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Description",
+                                "column_2_value_1",
+                                "{Description}",
+                                [
+                                  {
+                                    "field": "Description",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Account Type",
+                                "column_3_value_1",
+                                "{transactioncategory}",
+                                [
+                                  {
+                                    "field": "transactioncategory",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_4_value_1",
+                                "{PrimaryQuantity}",
+                                [
+                                  {
+                                    "field": "PrimaryQuantity",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Price",
+                                "column_5_value_1",
+                                "{MarketPrice}",
+                                [
+                                  {
+                                    "field": "MarketPrice",
+                                    "format": "decimal.type5"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{MarketValue}",
+                                [
+                                  {
+                                    "field": "MarketValue",
+                                    "format": "decimal.type6"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Estimated Annual Income",
+                                "column_7_value_1",
+                                "{EstimatedAnnualIncome}",
+                                [
+                                  {
+                                    "field": "EstimatedAnnualIncome",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type41": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Quantity",
+                                "column_4_value_1",
+                                "{TotalNumberofSecurities}",
+                                [
+                                  {
+                                    "field": "TotalNumberofSecurities",
+                                    "format": "decimal.type8"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Market Value",
+                                "column_6_value_1",
+                                "{AssetClassTotalValue}",
+                                [
+                                  {
+                                    "field": "AssetClassTotalValue",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Estimated Annual Income",
+                                "column_7_value_1",
+                                "{TotalEstimatedAnnualIncome}",
+                                [
+                                  {
+                                    "field": "TotalEstimatedAnnualIncome",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type42": [
+                          {
+                            "Detail": [
+                              [
+                                "Classification",
+                                "column_1_value_1",
+                                "{classification}",
+                                [
+                                  {
+                                    "field": "classification",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_2_value_1",
+                                "{thisperiod}",
+                                [
+                                  {
+                                    "field": "thisperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_3_value_1",
+                                "{ytdperiod}",
+                                [
+                                  {
+                                    "field": "ytdperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type43": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Total",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_2_value_1",
+                                "{thisperiodtotal}",
+                                [
+                                  {
+                                    "field": "thisperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "This Period",
+                                "column_3_value_1",
+                                "{ytdperiodtotal}",
+                                [
+                                  {
+                                    "field": "ytdperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type44": [
+                          {
+                            "Detail": [
+                              [
+                                "Classification",
+                                "column_1_value_1",
+                                "{classification}",
+                                [
+                                  {
+                                    "field": "classification",
+                                    "format": ""
+                                  }
+                                ],
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_3_value_1",
+                                "{thisperiod}",
+                                [
+                                  {
+                                    "field": "thisperiod",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ],
+                        "Type45": [
+                          {
+                            "Total": [
+                              [
+                                "Y",
+                                "total_value_indicator",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Closing Balance",
+                                "column_1_value_1",
+                                "",
+                                "",
+                                {}
+                              ],
+                              [
+                                "Previous Period",
+                                "column_3_value_1",
+                                "{thisperiodtotal}",
+                                [
+                                  {
+                                    "field": "thisperiodtotal",
+                                    "format": "decimal.type1"
+                                  }
+                                ],
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "detail_summary_table": {
+                      "PortfolioValue": {
+                        "Heading": "Portfolio Value",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "Detail": "RecType.Type42",
+                        "Total": "RecType.Type43"
+                      },
+                      "CashActivitySummary": {
+                        "Heading": "Cash Activity Summary",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "Detail": "RecType.Type44",
+                        "Total": "RecType.Type45"
+                      },
+                      "IncomeSummary": {
+                        "Heading": "Income Summary",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "Detail": "RecType.Type42",
+                        "Total": "RecType.Type43"
+                      }
+                    },
+                    "detail_transactions_table": {
+                      "PurchaseAndSale": {
+                        "Heading": "Purchase and Sale",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, date NULLS LAST",
+                        "Detail": "RecType.Type38",
+                        "Total": "RecType.Type12"
+                      },
+                      "PendingSettlements": {
+                        "Heading": "Pending Settlements",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, date NULLS LAST",
+                        "Detail": "RecType.Type38",
+                        "Total": "RecType.Type12"
+                      },
+                      "OtherActivity": {
+                        "Heading": "Other Activity",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, date NULLS LAST",
+                        "Detail": "RecType.Type39",
+                        "Total": "RecType.Type14"
+                      }
+                    },
+                    "detail_holdings_table": {
+                      "EquitiesLongPositions": {
+                        "Heading": "Equities - Long Positions",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "EquitiesShortPositions": {
+                        "Heading": "Equities - Short Positions",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "MoneyMarketFunds": {
+                        "Heading": "Money Market Funds",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "MutualFunds": {
+                        "Heading": "Mutual Funds",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "CorporateBonds": {
+                        "Heading": "Corporate Bonds",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "MunicipalBonds": {
+                        "Heading": "Municipal Bonds",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "GovernmentAgencyREMIC": {
+                        "Heading": "Government Agency REMIC",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "ConvertibleBonds": {
+                        "Heading": "Convertible Bonds",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "Options": {
+                        "Heading": "Options",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "ForeignFixedIncome": {
+                        "Heading": "Foreign Fixed Income",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "GovernmentBonds": {
+                        "Heading": "Government Bonds",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      },
+                      "Other": {
+                        "Heading": "Other",
+                        "batching_required": "Y",
+                        "layout_category": "S",
+                        "order_by": "recordtype COLLATE \"C\" NULLS LAST, description COLLATE \"C\" NULLS LAST",
+                        "Detail": "RecType.Type40",
+                        "Total": "RecType.Type41"
+                      }
+                    },
+                    "duplicate_copy_sent_to_type_1": {
+                      "DuplicateCopies": {
+                        "Heading": "Duplicate Copy Sent To:",
+                        "Detail": ""
+                      }
+                    },
+                    "statement_dates_type_1": {
+                      "StatementDates": {
+                        "Heading": "Statement Date",
+                        "StatementDate": "RecType.Type1"
+                      }
+                    }
+                  }
+                }
+              ],
+              "tableInfo": {
+                "region": "us-east-1",
+                "dbkey": "/dpmuev1/qa/database-secret",
+                "dbname": "SocGen",
+                "schema": "public"
+              }
+            }
+          }
+        },
+        {
+          "name": "drivercreation",
+          "order": "3",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_DRIVERCREATION",
+          "sfNextKey": "SM_ARN_NDMTOONPREM",
+          "sfStepsToDone": {
+            "drivercreation": {
+              "sql_queries": {
+                "query_staging_tables": "SELECT * FROM {table_name}",
+                "fetch_staging_tables": "SELECT tablename FROM pg_tables WHERE schemaname = '{schema_name}' AND tablename LIKE '{table_name_pattern}'",
+                "merge_and_drop_historical_tables": "SELECT merge_and_drop_historical_tables('{table_name_pattern}','{schema_name}','{run_type}')",
+                "drop_staging_tables": "SELECT drop_staging_tables('{table_name_pattern}','{schema_name}')",
+                "column_names": [
+                  "partyid",
+                  "partyidentifier",
+                  "clientid",
+                  "statementtype",
+                  "statement"
+                ],
+                "combinations": [
+                  {
+                    "category": "025",
+                    "rules": [
+                      {
+                        "field": "party_clientid",
+                        "operator": "in",
+                        "values": [
+                          "025"
+                        ]
+                      }
+                    ],
+                    "base_filename": "SOCGEN_STMT_{mmddyyyy}_BPS_{timestamp}_P"
+                  }
+                ],
+                "batch_size": "1000",
+                "zip_file_size": "500",
+                "filetype": "json"
+              },
+              "tableInfo": {
+                "region": "us-east-1",
+                "dbkey": "/dpmuev1/qa/database-secret",
+                "dbname": "SocGen",
+                "schema": "public"
+              },
+              "fileName": "",
+              "object_key": ""
+            }
+          }
+        },
+        {
+          "name": "ndmtoonprem",
+          "order": "4",
+          "initStep": "False",
+          "endStep": "False",
+          "sfKey": "SM_ARN_NDMTOONPREM",
+          "sfNextKey": "SM_ARN_ARCHIVAL",
+          "sfStepsToDone": {
+            "ndmjson": {
+              "Type": "zip",
+              "ndmFilePath": "socgen/statements/wip/",
+              "ndmFilePattern": "^SOCGEN_STMT_\\d{8}_BPS_\\d{6}_P_(?:\\d+|manifest)\\.(?:zip|txt)$",
+              "moveFlag": "False",
+              "version": "_v1"
+            }
+          },
+          "sfParams": {
+            "job_name": "ScgStmt",
+            "archive_uri": "socgen/statements/to_internal/save/",
+            "to_internal_uri": "socgen/statements/to_internal/",
+            "to_internal_json_uri": "socgen/statements/to_internal/json/",
+            "onprem_system": "brcc",
+            "onprem_subsystem": "infactrapidstmts",
+            "onprem_folder": "input",
+            "snode": {
+              "dev": [
+                "sterlingqa",
+                "cdusr855d",
+                "dev"
+              ],
+              "qa": [
+                "sterlingqa",
+                "cdusr855",
+                "qa"
+              ],
+              "uat": [
+                "edhusiosu",
+                "cdusr855",
+                "uat"
+              ],
+              "prd": [
+                "edhusiosp",
+                "cdusr855",
+                "prod"
+              ]
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "5",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(logomsgs)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].csv",
+      "fileType": "csv",
+      "StepFunction": [
+        {
+          "name": "CSV Load to Table",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "",
+          "sfStepsToDone": {
+            "header": "true",
+            "csvLoadStage": {
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "region": "us-east-1",
+              "key_location": {
+                "logomsgs": {
+                  "delimiter": "|",
+                  "table_name": "logomsgs",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(SGAS|BIS|025)_Statement_Suppression_List_[0-9]{4}[0-1][0-9][0-3][0-9].csv",
+      "fileType": "",
+      "StepFunction": [
+        {
+          "name": "CSV Load to Table",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "",
+          "sfStepsToDone": {
+            "header": "false",
+            "csvLoadStage": {
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "region": "us-east-1",
+              "key_location": {
+                "025_Statement_Suppression": {
+                  "delimiter": "|",
+                  "table_name": "Statement_Suppression",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                },
+                "SGAS_Statement_Suppression": {
+                  "delimiter": "|",
+                  "table_name": "Statement_Suppression",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                },
+                "BIS_Statement_Suppression": {
+                  "delimiter": "|",
+                  "table_name": "Statement_Suppression",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "2",
+          "initStep": "True",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(025_summary_sections)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].csv",
+      "fileType": "",
+      "StepFunction": [
+        {
+          "name": "CSV Load to Table",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "",
+          "sfStepsToDone": {
+            "header": "true",
+            "csvLoadStage": {
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "region": "us-east-1",
+              "key_location": {
+                "025_summary_sections": {
+                  "delimiter": "|",
+                  "table_name": "025_summary_sections",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+    {
+      "filename": "(025_b228_reference_lookup)_[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9][0-5][0-9][0-5][0-9].csv",
+      "fileType": "",
+      "StepFunction": [
+        {
+          "name": "CSV Load to Table",
+          "order": "1",
+          "initStep": "True",
+          "endStep": "False",
+          "sfKey": "SM_ARN_LOADSTAGE",
+          "sfNextKey": "",
+          "sfStepsToDone": {
+            "header": "true",
+            "csvLoadStage": {
+              "dbkey": "/dpmuev1/qa/database-secret",
+              "fileName": "",
+              "object_key": "",
+              "region": "us-east-1",
+              "key_location": {
+                "025_b228_reference_lookup": {
+                  "delimiter": "|",
+                  "table_name": "025_b228_reference_lookup",
+                  "database": "SocGen",
+                  "schema": "AUX",
+                  "mode": "recreate"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "archival",
+          "order": "2",
+          "initStep": "False",
+          "endStep": "True",
+          "sfKey": "SM_ARN_ARCHIVAL",
+          "archivalDestinationKey": "socgen/statements/save/"
+        }
+      ]
+    },
+	{
+		"filename": "(TRUNCATE_SCHEMA_SOCGEN_STATEMENTS)_[0-9]{4}_[0-1][0-9].trigger",
+		"fileType": "",
+		"StepFunction": [
+			{
+				"name": "truncate SOCGEN schema",
+				"order": "1",
+				"initStep": "True",
+				"endStep": "False",
+				"sfKey": "SM_ARN_TRUNCATESCHEMA",
+				"sfNextKey": "SM_ARN_ARCHIVAL",
+				"sfStepsToDone": {
+					"truncateschema": {
+						"data_base": "SocGen",
+						"schemas": "public",
+						"exclude_tables": "bios_socgen_out_recon, bios_socgen_out_recon_data_account_list",
+						"ssmdbkey": "/dpmtest/dev/database-secret"
+					}
+				}
+			},
+			{
+				"name": "archival",
+				"order": "2",
+				"initStep": "False",
+				"endStep": "True",
+				"sfKey": "SM_ARN_ARCHIVAL",
+				"archivalDestinationKey": "wfs/save/"
+			}
+		]
+	}
+  ],
+  "sfn_info": {
+    "SM_ARN_BRXTRIGGERSFN": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-brxtasktrigger",
+    "SM_ARN_ADPSECURITY": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-adpsecurity",
+    "SM_ARN_COPY_FILES": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-copy_files",
+    "SM_ARN_MERGE_FILES": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-merge_files",
+	"SM_ARN_TRUNCATESCHEMA": "arn:aws:states:{region}:{account_id}:stateMachine:br-ics{env}-dpmdi-us-east-1-sfn-di-truncate_schema"
+  },
+  "createdDateTime": "timestampinUTC",
+  "updatedDateTime": "timestampinUTC"
+}

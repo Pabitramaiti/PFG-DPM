@@ -1,0 +1,151 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "ArchiveLambda",
+  "States": {
+    "ArchiveLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_archive",
+        "Payload": {
+          "BucketName.$": "$.StatePayload.bucket",
+          "DestinationKey.$": "$.StatePayload.archival_destination_key",
+          "SourceKeys.$": "$.StatePayload.archival_file_prefix",
+          "OperationType.$": "$.StatePayload.operation_type"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ArchiveLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_archive",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.archivalFile",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.archivalFile",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_ARCHIVAL.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.ArchiveLambdaOutput.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_ARCHIVAL.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_ARCHIVAL.sfOutputFile",
+          "fileStatus": "Completed",
+          "fileLog.$": "$.ArchiveLambdaOutput.Payload.body",
+          "initStep.$": "$.StatePayload.SM_ARN_ARCHIVAL.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_ARCHIVAL.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.archivalFile",
+          "fileId.$": "$.StatePayload.archivalFile",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_ARCHIVAL.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_ARCHIVAL.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_ARCHIVAL.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_ARCHIVAL.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_ARCHIVAL.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

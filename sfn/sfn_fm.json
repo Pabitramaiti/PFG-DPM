@@ -1,0 +1,100 @@
+{
+  "Comment": "Check action_type and branch",
+  "StartAt": "DBMonitoringLambda",
+  "States": {
+    "DBMonitoringLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:tracking_file",
+        "Payload.$": "$"
+      },
+      "Next": "ActionCheck",
+      "ResultPath": "$"
+    },
+    "ActionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "FileMerger",
+          "Variable": "$.LmbdaPayload.action_type",
+          "StringEquals": "file_merger"
+        },
+        {
+          "Next": "ContentMerger",
+          "Variable": "$.LmbdaPayload.action_type",
+          "StringEquals": "content_merger"
+        },
+        {
+          "Next": "Success",
+          "And": [
+            {
+              "Variable": "$.LmbdaPayload.action_type",
+              "IsNull": true
+            },
+            {
+              "Variable": "$.LmbdaPayload.comment",
+              "StringEquals": "NoGroup"
+            }
+          ]
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FileMerger": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "FileMergeJob",
+        "Arguments": {
+          "--file_monitoring_table.$": "$.LmbdaPayload.file_monitoring_table",
+          "--output_prefix.$": "$.LmbdaPayload.output_prefix",
+          "--group_name.$": "$.LmbdaPayload.group_name",
+          "--grp_initial_status.$": "$.LmbdaPayload.grp_initial_status",
+          "--grp_completion_status.$": "$.LmbdaPayload.grp_completion_status",
+          "--group_items.$": "States.JsonToString($.LmbdaPayload.group_items)"
+        }
+      },
+      "Next": "Success",
+      "ResultPath": "$.JobOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail"
+        }
+      ]
+    },
+    "ContentMerger": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "ContentMergeJob",
+        "Arguments": {
+          "--file_monitoring_table.$": "$.LmbdaPayload.file_monitoring_table",
+          "--output_prefix.$": "$.LmbdaPayload.output_prefix",
+          "--group_name.$": "$.LmbdaPayload.group_name",
+          "--grp_initial_status.$": "$.LmbdaPayload.grp_initial_status",
+          "--grp_completion_status.$": "$.LmbdaPayload.grp_completion_status",
+          "--group_items.$": "States.JsonToString($.LmbdaPayload.group_items)"
+        }
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

@@ -1,0 +1,1137 @@
+{
+  "Comment": "Module for different types of conversions",
+  "StartAt": "Conversion",
+  "States": {
+    "Conversion": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.csvtoxml",
+          "IsPresent": true,
+          "Next": "csvtoxml"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.xmltojson",
+          "IsPresent": true,
+          "Next": "xmltojson"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.copybooktojson",
+          "IsPresent": true,
+          "Next": "copybooktojson"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebctoascii",
+          "IsPresent": true,
+          "Next": "ebctoascii"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ClientSpecificConversion",
+          "IsPresent": true,
+          "Next": "clientspecificconversion"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.PositionalToJSON",
+          "IsPresent": true,
+          "Next": "PositionalToJSON"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.delimitedtojson",
+          "IsPresent": true,
+          "Next": "delimitedtojson"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion",
+          "IsPresent": true,
+          "Next": "b228Conversion"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.delimitedtoxml",
+          "IsPresent": true,
+          "Next": "delimitedtoxml"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml",
+          "IsPresent": true,
+          "Next": "JsonToURXml"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii",
+          "IsPresent": true,
+          "Next": "ebcdictoascii"
+        },
+        {
+          "Next": "purchaseandbatch",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.purchaseandbatch",
+          "IsPresent": true
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228HeaderPrep",
+          "IsPresent": true,
+          "Next": "b228HeaderPrep"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.MultiFileEbcdicToAscii",
+          "IsPresent": true,
+          "Next": "MultiFileEbcdicToAsciiMap"
+        },
+        {
+          "Next": "b1ConfigCreation",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config",
+          "IsPresent": true
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson",
+          "IsPresent": true,
+          "Next": "jsontojson"
+        },
+        {
+          "Next": "java-function-executor",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.java_functions",
+          "IsPresent": true
+        },
+        {
+          "Next": "Brxjson_to_Smartcomjson_convertor",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson",
+          "IsPresent": true
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform",
+          "IsPresent": true,
+          "Next": "jhiMiscTransform"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson",
+          "IsPresent": true,
+          "Next": "columnartojson"
+        },
+        {
+          "Next": "columnar_to_csv",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnarToCsv",
+          "IsPresent": true
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "java-function-executor": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_java_ecs_executor",
+        "Arguments": {
+          "--function_input.$": "States.JsonToString($.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.java_functions)"
+        }
+      },
+      "Next": "next_step",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "next_step": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "multi-cost-basis",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis",
+          "IsPresent": true
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "multi-cost-basis": {
+      "Type": "Map",
+      "ItemsPath": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.types_of_data",
+      "Parameters": {
+        "type_of_data.$": "$$.Map.Item.Value",
+        "StatePayload.$": "$.StatePayload"
+      },
+      "MaxConcurrency": 10,
+      "Iterator": {
+        "StartAt": "cost-basis",
+        "States": {
+          "cost-basis": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmdi_glue_cost_basis_heavy_load",
+              "Arguments": {
+                "--s3_bucket.$": "$.StatePayload.bucket",
+                "--s3_input_file.$": "$.StatePayload.key",
+                "--dbkey.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.dbkey",
+                "--src_table.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.src_table",
+                "--schema.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.schema",
+                "--move_table_if_exists.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.move_table_if_exists",
+                "--type_of_data.$": "$.type_of_data",
+                "--dest_table_name.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.dest_table_name",
+                "--delete_source_table.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.cost_basis.delete_source_table"
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.mapStatus",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+
+    "purchaseandbatch": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_purchase_batch_conversion",
+        "Arguments": {
+          "--input_file.$": "$.StatePayload.fileName",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--output_folder.$": "$.StatePayload.inputPath",
+          "--output_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.purchaseandbatch.output_file"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ebcdictoascii": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_spark_ascii_new",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--file_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.file_path",
+          "--file_pattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.file_pattern",
+          "--file_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.file_key",
+          "--out_ASCII_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.out_ASCII_path",
+          "--EBCDIC_Mapping_Key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.EBCDIC_Mapping_Key",
+          "--ASCII_Mapping_Key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.ASCII_Mapping_Key",
+          "--COMMON_cfg_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.COMMON_cfg_key",
+          "--filetype.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.filetype",
+          "--delimeter_flag.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.delimeter_flag",
+          "--input_ascii_flag.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.input_ascii_flag",
+          "--CheckOutputAsciiFlag.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.CheckOutputAsciiFlag",
+          "--isOptional.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.isOptional"
+        }
+      },
+      "Next": "CheckOutputAsciiFlag",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "CheckOutputAsciiFlag": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.CheckOutputAsciiFlag",
+          "StringEquals": "true",
+          "Next": "ConversionAsciitoJsonglue"
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "columnartojson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_columnartojson",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--input_bucket.$": "$.StatePayload.bucket",
+          "--input_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.input_path",
+          "--config_bucket.$": "$.StatePayload.bucket",
+          "--config_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.config_folder",
+          "--config_files.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.config_files",
+          "--output_bucket.$": "$.StatePayload.bucket",
+          "--output_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.output_path",
+          "--record_type_start.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.record_type_start",
+          "--record_type_end.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.record_type_end",
+          "--skip_record_patterns.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnartojson.skip_record_patterns"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ConversionAsciitoJsonglue": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_ascii_to_json",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--file_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.file_path",
+          "--file_pattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.file_pattern",
+          "--file_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.file_key",
+          "--out_ASCII_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.out_ASCII_path",
+          "--EBCDIC_Mapping_Key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.EBCDIC_Mapping_Key",
+          "--ASCII_Mapping_Key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.ASCII_Mapping_Key",
+          "--COMMON_cfg_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.COMMON_cfg_key",
+          "--filetype.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.filetype",
+          "--delimeter_flag.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.delimeter_flag",
+          "--input_ascii_flag.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.input_ascii_flag",
+          "--out_ASCII_pattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.out_ASCII_pattern",
+          "--output_ascii_file_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ebcdictoascii.output_ascii_file_key"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "MultiFileEbcdicToAsciiMap": {
+      "Type": "Map",
+      "ItemsPath": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.MultiFileEbcdicToAscii.fileList",
+      "Parameters": {
+        "file.$": "$$.Map.Item.Value",
+        "StatePayload.$": "$.StatePayload"
+      },
+      "MaxConcurrency": 10,
+      "Iterator": {
+        "StartAt": "MultiFileEbcdicToAsciiGlueJob",
+        "States": {
+          "MultiFileEbcdicToAsciiGlueJob": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmdi_glue_spark_ascii_new",
+              "Arguments": {
+                "--inputFileName.$": "$.StatePayload.fileName",
+                "--bucketName.$": "$.StatePayload.bucket",
+                "--file_path.$": "$.file.file_path",
+                "--file_pattern.$": "$.file.file_pattern",
+                "--file_key.$": "$.file.file_key",
+                "--out_ASCII_path.$": "$.file.out_ASCII_path",
+                "--EBCDIC_Mapping_Key.$": "$.file.EBCDIC_Mapping_Key",
+                "--ASCII_Mapping_Key.$": "$.file.ASCII_Mapping_Key",
+                "--COMMON_cfg_key.$": "$.file.COMMON_cfg_key",
+                "--filetype.$": "$.file.filetype",
+                "--delimeter_flag.$": "$.file.delimeter_flag",
+                "--input_ascii_flag.$": "$.file.input_ascii_flag",
+                "--CheckOutputAsciiFlag.$": "$.file.CheckOutputAsciiFlag",
+                "--isOptional.$": "$.file.isOptional"
+              }
+            },
+            "ResultPath": null,
+            "Next": "CheckMultiFileOutputAsciiFlag",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "MultiFileIterationError"
+              }
+            ]
+          },
+          "CheckMultiFileOutputAsciiFlag": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.file.CheckOutputAsciiFlag",
+                "StringEquals": "true",
+                "Next": "MultiFileConversionAsciiToJsonGlue"
+              }
+            ],
+            "Default": "MultiFileIterationEnd"
+          },
+          "MultiFileConversionAsciiToJsonGlue": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmdi_glue_ascii_to_json",
+              "Arguments": {
+                "--inputFileName.$": "$.StatePayload.fileName",
+                "--bucketName.$": "$.StatePayload.bucket",
+                "--file_path.$": "$.file.file_path",
+                "--file_pattern.$": "$.file.file_pattern",
+                "--file_key.$": "$.file.file_key",
+                "--out_ASCII_path.$": "$.file.out_ASCII_path",
+                "--EBCDIC_Mapping_Key.$": "$.file.EBCDIC_Mapping_Key",
+                "--ASCII_Mapping_Key.$": "$.file.ASCII_Mapping_Key",
+                "--COMMON_cfg_key.$": "$.file.COMMON_cfg_key",
+                "--filetype.$": "$.file.filetype",
+                "--delimeter_flag.$": "$.file.delimeter_flag",
+                "--input_ascii_flag.$": "$.file.input_ascii_flag",
+                "--out_ASCII_pattern.$": "$.file.out_ASCII_pattern",
+                "--output_ascii_file_key.$": "$.file.output_ascii_file_key"
+              }
+            },
+            "ResultPath": null,
+            "Next": "MultiFileIterationEnd",
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 2,
+                "BackoffRate": 2
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "MultiFileIterationError"
+              }
+            ]
+          },
+          "MultiFileIterationEnd": {
+            "Type": "Pass",
+            "Result": {
+              "status": "completed",
+              "hasError": false
+            },
+            "End": true
+          },
+          "MultiFileIterationError": {
+            "Type": "Pass",
+            "Result": {
+              "status": "completed",
+              "hasError": true
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.mapStatus",
+      "Next": "CheckMultiFileMapResults"
+    },
+    "CheckMultiFileMapResults": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.mapStatus",
+          "IsPresent": true,
+          "Next": "EvaluateMultiFileMapFailures"
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "EvaluateMultiFileMapFailures": {
+      "Type": "Pass",
+      "Parameters": {
+        "hasFailures.$": "States.ArrayContains($.mapStatus[*].hasError, true)"
+      },
+      "ResultPath": "$.failureCheck",
+      "Next": "CheckForAnyFailures"
+    },
+    "CheckForAnyFailures": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.failureCheck.hasFailures",
+          "BooleanEquals": true,
+          "Next": "MultifileConversionErrorAnalysis"
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "MultifileConversionErrorAnalysis": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:error_analysis",
+        "Payload": {
+          "inputFileName.$": "$.StatePayload.fileName",
+          "bucketName.$": "$.StatePayload.bucket",
+          "error_report_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.MultiFileEbcdicToAscii.error_report_path"
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.errorDetails",
+      "Next": "FailureTransactionUpdation"
+    },
+    "JsonToURXml": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_conversion_json_to_xml",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--xmlConfigPath.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.xmlConfigPath",
+          "--xmlConfigPattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.xmlConfigPattern",
+          "--xmlConfigKey.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.xmlConfigKey",
+          "--payloadPath.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.payloadPath",
+          "--jsonPath.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.jsonPath",
+          "--jsonPattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.jsonPattern",
+          "--jsonKey.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.jsonKey",
+          "--xmlDestination.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.xmlDestination",
+          "--xmlDestinationPrefix.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.xmlDestinationPrefix",
+          "--batching.$": "States.JsonToString($.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.batching)",
+          "--clientIdMapping.$": "States.JsonToString($.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.clientIdMapping)",
+          "--productIdMapping.$": "States.JsonToString($.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.productIdMapping)",
+          "--payloadFileMapping.$": "States.JsonToString($.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.payloadFileMapping)",
+          "--mappingType.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.JsonToUrXml.mappingType"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed",
+            "Glue.ConcurrentRunsExceededException"
+          ],
+          "BackoffRate": 2,
+          "MaxAttempts": 5,
+          "Comment": "retrier",
+          "IntervalSeconds": 30
+        }
+      ]
+    },
+    "PositionalToJSON": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_positional_to_json",
+        "Arguments": {
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfOutputFile",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--config_str.$": "$.StatePayload.SM_ARN_CONVERSION.config_str"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "delimitedtojson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_delimited_to_json",
+        "Arguments": {
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfOutputFile",
+          "--delimiter.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.delimitedtojson.delimiter",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--config_str.$": "$.StatePayload.SM_ARN_CONVERSION.config_str"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "delimitedtoxml": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_delimited_to_xml",
+        "Arguments": {
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_CONVERSION.delimited_to_xml_destination",
+          "--conversion_parameters.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.delimitedtoxml.conversionParameters"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "xmltojson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_xml_to_json",
+        "Arguments": {
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfOutputFile"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "jsontojson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_json_to_json",
+        "Arguments": {
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--file_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson.file_key",
+          "--input_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson.input_path",
+          "--input_regex.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson.input_regex",
+          "--output_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson.output_path",
+          "--mapping_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson.mapping_key",
+          "--output_file_postfix.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jsontojson.output_file_postfix"
+        }
+      },
+      "Next": "Choice",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "docSortKey",
+          "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey",
+          "IsPresent": true
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "docSortKey": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_add_sortkey_tle:$LATEST",
+        "Payload": {
+          "inputFileName.$": "$.StatePayload.fileName",
+          "bucketName.$": "$.StatePayload.bucket",
+          "filePath.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey.filePath",
+          "filePattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey.filePattern",
+          "fileKey.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey.fileKey",
+          "outputPath.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey.outputPath",
+          "mappingKey.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey.mappingKey",
+          "outputFilePostfix.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.docSortKey.outputFilePostfix"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "ResultPath": "$.docSortKeyOutput",
+      "Next": "SuccessTransactionUpdation"
+    },
+    "jhiMiscTransform": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsqa_dpmdi_glue_convert_misc_json_to_json",
+        "Arguments": {
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--input_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.input_key",
+          "--input_pattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.input_pattern",
+          "--output_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.output_key",
+          "--task_definition.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.task_definition",
+          "--cluster_name.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.cluster_name",
+          "--container_name.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.container_name",
+          "--key.$": "$.StatePayload.key",
+          "--transactionId.$": "$.StatePayload.transactionId",
+          "--output_report_key.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.jhiMiscTransform.output_report_key"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "b228Conversion": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_b228_split_conversion",
+        "Arguments": {
+          "--input_filepath_ebcdic.$": "$.StatePayload.fileName",
+          "--input_bucket.$": "$.StatePayload.bucket",
+          "--input_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.input_folder",
+          "--config_filename.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.config_filename",
+          "--config_bucket.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.config_bucket",
+          "--config_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.config_folder",
+          "--output_bucket.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.output_bucket",
+          "--output_queue_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.output_queue_folder",
+          "--thread_model.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.thread_model",
+          "--thread_num.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.thread_num",
+          "--batch_size.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.batch_size",
+          "--header_queue_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.header_queue_folder",
+          "--header_input_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.header_input_folder",
+          "--hold_queue_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.hold_queue_folder",
+          "--queue_folder.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.queue_folder",
+          "--run_type.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.run_type",
+          "--trid_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.trid_file",
+          "--b1_settings.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.b1_settings",
+          "--file_validation.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.file_validation",
+          "--account_filter.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.account_filter",
+          "--s3_batchsize.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.s3_batchsize",
+          "--printSuppInd.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.printSuppInd",
+          "--rbcfilterenable.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.rbcfilterenable",
+          "--rbcacffile.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.rbcacffile",
+          "--rbcbranchfile.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228Conversion.rbcbranchfile"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "b228HeaderPrep": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_b228_header_prep",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--header_input_json.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228HeaderPrep.header_input_json",
+          "--header_output_json.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228HeaderPrep.header_output_json",
+          "--config.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.b228HeaderPrep.config"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "csvtoxml": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "myJobName"
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "copybooktojson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_parse_copybook_to_json",
+        "Arguments": {
+          "--copybook_bucket.$": "$.StatePayload.bucket",
+          "--copybook_key.$": "$.StatePayload.key",
+          "--json_bucket.$": "$.StatePayload.bucket",
+          "--trackrecords.$": "$.StatePayload.trackrecords"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ebctoascii": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_spark_ascii_new"
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "clientspecificconversion": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_clientspecific_fileconversion",
+        "Arguments": {
+          "lambdaName.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.ClientSpecificConversion.lambdaArn",
+          "key.$": "$.StatePayload.key"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_CONVERSION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Job completed successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_CONVERSION.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_CONVERSION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_CONVERSION.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_CONVERSION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_CONVERSION.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_CONVERSION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_CONVERSION.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_CONVERSION.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_CONVERSION.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "b1ConfigCreation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_b1_layout_creation",
+        "Arguments": {
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_config_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.b1_config_filename",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfOutputFile",
+          "--transaction_selector.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.transaction_set_selector",
+          "--csv_read_params.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.csv_read_params",
+          "--b1_file_header.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.b1_file_header",
+          "--default_value.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.default_value",
+          "--client_id.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.client_id"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation"
+    },
+    "Brxjson_to_Smartcomjson_convertor": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_brxjson_to_smartcomjson_convertor",
+        "Arguments": {
+          "--file_path.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.file_path",
+          "--file_pattern.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.file_pattern",
+          "--inputbucket.$": "$.StatePayload.bucket",
+          "--outputbucket.$": "$.StatePayload.bucket",
+          "--outputpath.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.outputpath",
+          "--build_jar.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.build_jar",
+          "--cluster_name.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.cluster_name",
+          "--task_definition_name.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.task_definition_name",
+          "--container_name.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.BrxjsontoSmartcomjson.container_name"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "columnar_to_csv": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_columnar_to_csv",
+        "Arguments": {
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_input_file.$": "$.StatePayload.sfInputFile",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.columnarToCsv.s3_output_file"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    }    
+  }
+}

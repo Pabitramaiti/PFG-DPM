@@ -1,0 +1,190 @@
+{
+  "Comment": "Order Grouping Function",
+  "StartAt": "orderGrouping",
+  "States": {
+    "orderGrouping": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_group_orders",
+        "Arguments": {
+          "--clientName.$": "$.StatePayload.clientName",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--objectKey.$": "$.StatePayload.key",
+          "--dbName.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfStepsToDone.orderGroupingFunction.dbName",
+          "--max_orderids.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfStepsToDone.orderGroupingFunction.max_orderids",
+          "--ssmDBKey.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfStepsToDone.orderGroupingFunction.ssmDBKey",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--transactionId.$": "$.StatePayload.transactionId",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--outputBucket.$": "$.StatePayload.bucket",
+          "--sf_cronConfig.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfStepsToDone.orderGroupingFunction.sf_cronConfig",
+          "--outputObjectKey.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfStepsToDone.orderGroupingFunction.outputPath",
+          "--destinationType.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfStepsToDone.orderGroupingFunction.destinationType"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 30,
+          "MaxAttempts": 3,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "ResultPath": "$.orderGroupingOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails",
+          "Comment": "Grouping Order Transactions in Database"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Order Grouping Function is Successful",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 30,
+          "MaxAttempts": 3,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime.$": "$.StatePayload.startDateTime",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "StepFunctionsStartExecution",
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_ORDER_GROUPING.sfNextKey",
+            "StringEquals": ""
+          }
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  },
+  "QueryLanguage": "JSONPath"
+}

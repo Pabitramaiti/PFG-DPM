@@ -1,0 +1,200 @@
+{
+  "Comment": "ECS runTask with Pass-built command",
+  "StartAt": "checkStepstobeDone",
+  "States": {
+    "checkStepstobeDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "BuidContainerOverrides",
+          "Variable": "$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone",
+          "IsPresent": true
+        }
+      ],
+      "Default": "Fail"
+    },
+    "BuidContainerOverrides": {
+      "Type": "Pass",
+      "Parameters": {
+        "ContainerOverrides": [
+          {
+            "Name": "directorcore_brx_adapter",
+            "Command.$": "States.Array(States.Format('--spring.profiles.active={}',$.StatePayload.sdlc_env),$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.s3_bucket,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.client_file_key,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.brx_file_pattern,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.brx_file_prefix,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.output_path,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.identifier,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.application_mode,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.primary_document, $.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.secondary_document,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.dictionary_file,$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.post_action)"
+          }
+        ]
+      },
+      "ResultPath": "$.ecsOverrides",
+      "Next": "RunBRxAdapterEngine"
+    },
+    "RunBRxAdapterEngine": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "LaunchType": "EC2",
+        "Cluster.$": "$.StatePayload.cluster",
+        "TaskDefinition.$": "$.StatePayload.task_definition",
+        "Overrides.$": "$.ecsOverrides"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.runStateFailureOutput",
+          "Next": "checkFailureMailFlag"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.originalInput"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_BRXADAPTER.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Completed Successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_BRXADAPTER.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BRXADAPTER.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Step Functions StartExecution",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput"
+    },
+    "Step Functions StartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        },
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_BRXADAPTER.sfNextKey"
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "checkFailureMailFlag": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "ACKEMailLambda",
+          "And": [
+            {
+              "Variable": "$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.ACKEmail",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.StatePayload.SM_ARN_BRXADAPTER.sfStepsToDone.ACKEmail.failureMailFlag",
+              "BooleanEquals": true
+            }
+          ]
+        }
+      ],
+      "Default": "FailureTransactionUpdation"
+    },
+    "ACKEMailLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_email_automation"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "FailureTransactionUpdation"
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.FailureTransactionUpdationOutput",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

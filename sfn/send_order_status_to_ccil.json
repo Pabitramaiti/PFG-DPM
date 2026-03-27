@@ -1,0 +1,186 @@
+{
+  "Comment": "Send order status to ccil",
+  "StartAt": "SendOrderStatusToClient",
+  "States": {
+    "SendOrderStatusToClient": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_send_final_status_to_ccil",
+        "Payload": {
+          "client.$": "$.StatePayload.clientName",
+          "transaction_id.$": "$.StatePayload.transactionId",
+          "ssmdbkey.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.ssmDBKey",
+          "execution_name.$": "$$.Execution.Name",
+          "execution_id.$": "$$.Execution.Id",
+          "execution_starttime.$": "$$.Execution.StartTime",
+          "statemachine_name.$": "$$.StateMachine.Name",
+          "statemachine_id.$": "$$.StateMachine.Id",
+          "state_name.$": "$$.State.Name",
+          "state_enteredtime.$": "$$.State.EnteredTime",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "applicationName.$": "$.StatePayload.applicationName",
+          "teamsId.$": "$.StatePayload.teamsId",
+          "destinationType.$": "$.StatePayload.destinationType",
+          "compressFileName.$": "$.StatePayload.compressFileName"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 30,
+          "MaxAttempts": 3,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Comment": "Error sending print aggregation workflow status to client",
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.SendOrderStatusToClientOutput"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.SendOrderStatusToClientOutput.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 30,
+          "MaxAttempts": 3,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "StepFunctionsStartExecution",
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_INVOKE_ORDER_STATUS.sfNextKey",
+            "StringEquals": ""
+          }
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  },
+  "QueryLanguage": "JSONPath"
+}

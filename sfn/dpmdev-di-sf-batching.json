@@ -1,0 +1,365 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "MoveCheck",
+  "States": {
+    "MoveCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles",
+          "IsPresent": true,
+          "Next": "MoveFiles"
+        }
+      ],
+      "Default": "MergeCheck"
+    },
+    "MoveFiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "dpmdev-di-glue-move_files",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--input_dir.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles.input_dir",
+          "--output_dir.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles.output_dir",
+          "--manifest_file_path.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles.manifest_file_path",
+          "--move_key_flag.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles.move_key_flag",
+          "--move_config.$": "States.JsonToString($.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles.move_config)"
+        }
+      },
+      "Next": "MergeCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "ResultPath": "$.MoveFilesOutput",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed",
+            "Glue.ConcurrentRunsExceededException"
+          ],
+          "Comment": "all_retry",
+          "IntervalSeconds": 30,
+          "BackoffRate": 2,
+          "MaxAttempts": 10
+        }
+      ]
+    },
+    "MergeCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.mergeFiles",
+          "IsPresent": true,
+          "Next": "MergeUrXmlFiles"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeFiles",
+          "IsPresent": true,
+          "Next": "CalculativeMergeFiles"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles",
+          "IsPresent": true,
+          "Next": "CalculativeMergeXMLFiles"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.sendToWifCoreKafka",
+          "IsPresent": true,
+          "Next": "sendToWifCoreKafka"
+        }
+      ]
+    },
+    "MergeUrXmlFiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "dpmdev-di-glue-merge_multiple_xml",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--path.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.mergeFiles.path",
+          "--regex_pattern.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.mergeFiles.regex_pattern"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.MergeFilesOutput",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Glue.ConcurrentRunsExceededException",
+            "States.TaskFailed"
+          ],
+          "BackoffRate": 2,
+          "Comment": "all_retry",
+          "IntervalSeconds": 30,
+          "MaxAttempts": 5
+        }
+      ]
+    },
+    "CalculativeMergeFiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "dpmdev-di-glue-calculative_merge",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--input_path.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeFiles.input_path",
+          "--input_regex.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeFiles.input_regex",
+          "--output_path.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeFiles.output_path",
+          "--config_key.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeFiles.config_key"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.MergeFilesOutput",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Glue.ConcurrentRunsExceededException",
+            "States.TaskFailed"
+          ],
+          "BackoffRate": 2,
+          "Comment": "all_retry",
+          "IntervalSeconds": 30,
+          "MaxAttempts": 5
+        }
+      ]
+    },
+    "CalculativeMergeXMLFiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "dpmdev-di-glue-calculative_merge_xml",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--input_path.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.input_path",
+          "--input_regex.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.input_regex",
+          "--output_path.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.output_path",
+          "--config_key.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.config_key",
+          "--done_file_key.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.done_file_key",
+          "--done_file_field.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.done_file_field",
+          "--done_file_flag.$": "$.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.done_file_flag",
+          "--metadata_config.$": "States.JsonToString($.StatePayload.SM_ARN_BATCHING.sfStepsToDone.CalculativeMergeXMLFiles.metadata_config)"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.MergeFilesOutput",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Glue.ConcurrentRunsExceededException",
+            "States.TaskFailed"
+          ],
+          "BackoffRate": 2,
+          "Comment": "all_retry",
+          "IntervalSeconds": 30,
+          "MaxAttempts": 5
+        }
+      ]
+    },
+    "sendToWifCoreKafka": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_send_to_wif_core_kafka",
+        "Arguments": {
+          "--bucket.$": "$.StatePayload.bucket",
+          "--environment.$": "$.StatePayload.sdlc_env",
+          "--region.$": "$.StatePayload.region",
+          "--move_files_object.$": "States.JsonToString($.StatePayload.SM_ARN_BATCHING.sfStepsToDone.moveFiles)",
+          "--wif_kafka_object.$": "States.JsonToString($.StatePayload.SM_ARN_BATCHING.sfStepsToDone.sendToWifCoreKafka)"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.MergeFilesOutput",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Glue.ConcurrentRunsExceededException",
+            "States.TaskFailed"
+          ],
+          "BackoffRate": 2,
+          "Comment": "all_retry",
+          "IntervalSeconds": 30,
+          "MaxAttempts": 10
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmtest_pp_transactions:$LATEST",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_BATCHING.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Batching Succeeded",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_BATCHING.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_BATCHING.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_BATCHING.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BATCHING.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmtest_pp_transactions:$LATEST",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_BATCHING.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_BATCHING.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_BATCHING.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BATCHING.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_BATCHING.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_BATCHING.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

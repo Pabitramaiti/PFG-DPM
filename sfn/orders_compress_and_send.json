@@ -1,0 +1,258 @@
+{
+    "Comment": "A description of my state machine",
+    "StartAt": "ZipFileCreation",
+    "States": {
+      "ZipFileCreation": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::glue:startJobRun.sync",
+        "Parameters": {
+          "JobName": "br_icsdev_dpmharppada_glue_zip_file_creation",
+          "Arguments": {
+            "--inputFileName.$": "$.StatePayload.fileName",
+            "--s3BucketOutput.$": "$.StatePayload.bucket",
+            "--s3BucketInput.$": "$.StatePayload.bucket",
+            "--filePathList.$": "States.JsonToString($.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.zipFileCreation.filePathList)",
+            "--filePatternList.$": "States.JsonToString($.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.zipFileCreation.filePatternList)",
+            "--zipDestination.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.zipFileCreation.zipDestination",
+            "--zipFileName.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.zipFileCreation.zipFileName",
+            "--zipType.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.zipFileCreation.zipType"
+          }
+        },
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Comment": "Error creating zip file",
+            "Next": "FailureTransactionUpdation",
+            "ResultPath": "$.errorDetails"
+          }
+        ],
+        "Next": "Choice",
+        "ResultPath": "$.ZipFileCreationOutput"
+      },
+      "Choice": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Next": "SendOrderStatusToClient",
+            "Variable": "$.StatePayload.destinationType",
+            "StringEquals": "marcomm"
+          }
+        ],
+        "Default": "ndmjson"
+      },
+      "ndmjson": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmharppada_lmbd_ndmjson",
+          "Payload": {
+            "bucket.$": "$.StatePayload.bucket",
+            "object.$": "$.StatePayload.key",
+            "ndmFilePath.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.ndmjson.ndmFilePath",
+            "ndmFilePattern.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.ndmjson.ndmFilePattern",
+            "moveFlag.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.ndmjson.moveFlag",
+            "ndmjsonparams.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.ndmjson.sfParams"
+          }
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2,
+            "JitterStrategy": "FULL"
+          }
+        ],
+        "Next": "SendOrderStatusToClient",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Comment": "Error sending files to OnPrem",
+            "Next": "FailureTransactionUpdation",
+            "ResultPath": "$.errorDetails"
+          }
+        ],
+        "ResultPath": "$.ndmjsonOutput"
+      },
+      "SuccessTransactionUpdation": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmharppada_lmbd_transactions",
+          "Payload": {
+            "transactionId.$": "$.StatePayload.transactionId",
+            "fileName.$": "$.StatePayload.fileName",
+            "isRejected.$": "$.StatePayload.isRejected",
+            "fileId.$": "$.StatePayload.fileId",
+            "startDateTime.$": "$.StatePayload.startDateTime",
+            "endDateTime": "",
+            "stepFunctions.$": "$.StatePayload.stepFunctions",
+            "clientName.$": "$.StatePayload.clientName",
+            "clientID.$": "$.StatePayload.clientID",
+            "documentType.$": "$.StatePayload.documentType",
+            "arnStepName.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.name",
+            "sfInstance.$": "$$.Execution.Id",
+            "sfStatus": "Succeeded",
+            "sfLog.$": "$.SendOrderStatusToClientOutput.Payload.body",
+            "sfStartTime.$": "$$.Execution.StartTime",
+            "sfEndTime": "",
+            "sfInputFile.$": "$.StatePayload.sfInputFile",
+            "sfOutputFile.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfOutputFile",
+            "fileStatus": "isprocessing",
+            "fileLog": "",
+            "initStep.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.initStep",
+            "endStep.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.endStep"
+          }
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Next": "StepFunctionsStartExecutionCheck",
+        "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailureTransactionUpdation",
+            "ResultPath": "$.errorDetails"
+          }
+        ]
+      },
+      "FailureTransactionUpdation": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmharppada_lmbd_transactions",
+          "Payload": {
+            "transactionId.$": "$.StatePayload.transactionId",
+            "fileName.$": "$.StatePayload.fileName",
+            "fileId.$": "$.StatePayload.fileId",
+            "isRejected.$": "$.StatePayload.isRejected",
+            "startDateTime.$": "$.StatePayload.startDateTime",
+            "endDateTime.$": "$.StatePayload.startDateTime",
+            "stepFunctions.$": "$.StatePayload.stepFunctions",
+            "clientName.$": "$.StatePayload.clientName",
+            "clientID.$": "$.StatePayload.clientID",
+            "documentType.$": "$.StatePayload.documentType",
+            "arnStepName.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.name",
+            "sfInstance.$": "$$.Execution.Id",
+            "sfStatus": "Failed",
+            "sfLog.$": "$.errorDetails.Cause",
+            "sfStartTime.$": "$$.Execution.StartTime",
+            "sfEndTime": "",
+            "sfInputFile.$": "$.StatePayload.sfInputFile",
+            "sfOutputFile.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfOutputFile",
+            "fileStatus": "Failed",
+            "fileLog": "",
+            "initStep.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.initStep",
+            "endStep.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.endStep",
+            "inputPath.$": "$.StatePayload.inputPath"
+          }
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Next": "Fail",
+        "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+      },
+      "StepFunctionsStartExecution": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::states:startExecution",
+        "Parameters": {
+          "StateMachineArn.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfNextKey",
+          "Input": {
+            "StatePayload.$": "$.StatePayload"
+          }
+        },
+        "Next": "Success"
+      },
+      "SendOrderStatusToClient": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:send_final_status_to_ccil",
+          "Payload": {
+            "client.$": "$.StatePayload.clientName",
+            "transaction_id.$": "$.StatePayload.transactionId",
+            "ssmdbkey.$": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfStepsToDone.orderStatus.ssmDBKey"
+          }
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2,
+            "JitterStrategy": "FULL"
+          }
+        ],
+        "Next": "SuccessTransactionUpdation",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Comment": "Error sending print aggregation workflow status to client",
+            "Next": "FailureTransactionUpdation",
+            "ResultPath": "$.errorDetails"
+          }
+        ],
+        "ResultPath": "$.SendOrderStatusToClientOutput"
+      },
+      "StepFunctionsStartExecutionCheck": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Next": "StepFunctionsStartExecution",
+            "Not": {
+              "Variable": "$.StatePayload.SM_ARN_PRINT_AGGREGATION.sfNextKey",
+              "StringEquals": ""
+            }
+          }
+        ],
+        "Default": "Success"
+      },
+      "Success": {
+        "Type": "Succeed"
+      },
+      "Fail": {
+        "Type": "Fail"
+      }
+    },
+    "QueryLanguage": "JSONPath"
+  }

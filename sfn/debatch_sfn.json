@@ -1,0 +1,495 @@
+{
+  "Comment": "Module for debatching",
+  "StartAt": "CheckEmptyFileValidation",
+  "States": {
+    "CheckEmptyFileValidation": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.check_empty_file",
+          "IsPresent": true,
+          "Next": "EmptyFileCheck"
+        },
+        {
+          "Next": "ECS RunTask",
+          "Variable": "$.StatePayload.clientName",
+          "StringEquals": "allianz"
+        }
+      ],
+      "Default": "debatchingCheck"
+    },
+    "ECS RunTask": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "LaunchType": "EC2",
+        "Cluster.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.Cluster",
+        "TaskDefinition.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.TaskDefinition",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.containerName",
+              "Command.$": "States.Array('--origin=dpm', States.Format('--singleLineStmt={}', $.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.singleLineStmt), States.Format('--product={}', $.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.product), States.Format('--docSubType={}', $.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.docSubType),  States.Format('--kafka_topic={}', $.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.kafka_topic), States.Format('--bucket={}', $.StatePayload.bucket), States.Format('--prefix={}', $.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.sourceKey), States.Format('--transactionId={}', $.StatePayload.transactionId), States.Format('--multiplePatternJson={}', States.JsonToString($.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.multiplePatternJson)))"
+            }
+          ]
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.output"
+    },
+    "EmptyFileCheck": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_empty_file_checker",
+        "Payload": {
+          "bucket.$": "$.StatePayload.bucket",
+          "file_key.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.check_empty_file.file_key",
+          "file_path.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.check_empty_file.file_path",
+          "file_pattern.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.check_empty_file.file_pattern"
+        }
+      },
+      "ResultPath": "$.emptyFileCheckOutput",
+      "Next": "EmptyFileCheckDecision",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "EmptyFileCheckDecision": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.emptyFileCheckOutput.Payload.is_file_empty",
+          "BooleanEquals": true,
+          "Next": "SendEmptyFileMail"
+        }
+      ],
+      "Default": "debatchingCheck"
+    },
+    "SendEmptyFileMail": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_email_automation",
+        "Payload": {
+          "input_file.$": "$.StatePayload.key",
+          "skip_email_send.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.skip_email_send",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.recipient_emails",
+          "subject.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.subject",
+          "body.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.body",
+          "cc_emails.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.cc_emails",
+          "object_key.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.object_prefix",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "pattern.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.pattern",
+          "attachment_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.attachment_flag",
+          "email_input_format.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.email_input_format",
+          "email_input_file.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.email_input_file",
+          "email_output_format.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.email_output_format",
+          "email_output_delimiter.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.ACKEmail.email_output_delimiter"
+        }
+      },
+      "ResultPath": "$.emptyFileMailOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "debatchingCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch",
+          "IsPresent": true,
+          "Next": "Debatch"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii",
+          "IsPresent": true,
+          "Next": "debatchAscii"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson",
+          "IsPresent": true,
+          "Next": "BundletoJson"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Debatch": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_debatch",
+        "Arguments": {
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--s3_output_path.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.outputPath",
+          "--config.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.config",
+          "--debatch_kafka.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.debatch_kafka",
+          "--send_to_kafka_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.send_to_kafka_flag",
+          "--done_file_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.done_file_flag",
+          "--done_folder_path.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.done_folder_path",
+          "--is_seperate_trailer_required.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.is_seperate_trailer_required",
+          "--is_seperate_header_required.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.is_seperate_header_required"
+        }
+      },
+      "Next": "DebatchSendToKafkaCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "BundletoJson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_bundle_to_json",
+        "Arguments": {
+          "--input_bucket.$": "$.StatePayload.bucket",
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--input_path.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.input_path",
+          "--kafka_topic_count.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.kafka_topic_count",
+          "--kafka_topic_prefix.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.kafka_topic_prefix",
+          "--batch_size.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.batch_size",
+          "--region.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.region",
+          "--kafka_brokers.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.kafka_brokers",
+          "--kafka_username.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.kafka_username",
+          "--kafka_password.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.kafka_password",
+          "--kafka_jaas_config.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.kafka_jaas_config",
+          "--data_masking_enable.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.data_masking_enable",
+          "--mask_data_file.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.BundletoJson.mask_data_file"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "debatchAscii": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_debatching_ascii",
+        "Arguments": {
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--ascii_file_path.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.ascii_file_path",
+          "--ascii_file_pattern.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.ascii_file_pattern",
+          "--ascii_file_key.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.ascii_file_key",
+          "--output_folder.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.output_folder",
+          "--batch_size.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.batch_size",
+          "--one_record_per_row.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.one_record_per_row",
+          "--start_record_type.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.start_record_type",
+          "--end_record_type.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.end_record_type",
+          "--header_skip_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.header_skip_flag",
+          "--header_in_file_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.header_in_file_flag",
+          "--header_rec.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.header_rec",
+          "--delimeter.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.delimeter",
+          "--rec_pos.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.rec_pos",
+          "--done_file_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.done_file_flag",
+          "--copy_folder_debatch.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.copy_folder_debatch",
+          "--copy_folder_manifest.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.copy_folder_manifest",
+          "--supp_file_path.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.supp_file_path",
+          "--supp_file_regex.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.supp_file_regex",
+          "--run_type.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.run_type",
+          "--include_metadata.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.include_metadata",
+          "--send_to_kafka_flag.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.send_to_kafka_flag",
+          "--configFile.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.configFile",
+          "--use_end_record_only.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.use_end_record_only",
+          "--header_record_type.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.header_record_type",
+          "--tailer_record_type.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.tailer_record_type",
+          "--use_greedy_assignment.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.use_greedy_assignment",
+          "--group_key_positions.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.group_key_positions"
+        }
+      },
+      "Next": "SendToKafkaCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "SendToKafkaCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.send_to_kafka_flag",
+          "StringEquals": "True",
+          "Next": "SendToKafka"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.send_to_kafka_flag",
+          "StringEquals": "False",
+          "Next": "SuccessTransactionUpdation"
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "DebatchSendToKafkaCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "SendToKafkaCmn",
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.send_to_kafka_flag",
+          "StringEquals": "true"
+        },
+        {
+          "Next": "SuccessTransactionUpdation",
+          "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.send_to_kafka_flag",
+          "StringEquals": "false"
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "SendToKafkaCmn": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload": {
+          "client_id.$": "$.StatePayload.clientID",
+          "transaction_id.$": "$.StatePayload.transactionId",
+          "bucket.$": "$.StatePayload.bucket",
+          "topic.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.topic",
+          "debatch_kafka.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch.debatch_kafka",
+          "s3_input_file.$": "$.StatePayload.key",
+          "kafka_info.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatch"
+        },
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_send_to_kafka_cmn"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "SendToKafka": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_send_debatch_kafka",
+        "Payload": {
+          "client_id.$": "$.StatePayload.clientID",
+          "transaction_id.$": "$.StatePayload.transactionId",
+          "output_folder.$": "$.Output.Arguments.--output_folder",
+          "bucket.$": "$.StatePayload.bucket",
+          "topic.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.topic",
+          "configFile.$": "$.StatePayload.SM_ARN_DEBATCH.sfStepsToDone.debatchAscii.configFile"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_DEBATCH.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Job completed successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_DEBATCH.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_DEBATCH.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_DEBATCH.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_DEBATCH.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_DEBATCH.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_DEBATCH.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_DEBATCH.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_DEBATCH.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_DEBATCH.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_DEBATCH.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_DEBATCH.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

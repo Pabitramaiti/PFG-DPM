@@ -1,0 +1,226 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Choice",
+  "States": {
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "MergeFiles",
+          "Variable": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles",
+          "IsPresent": true
+        },
+        {
+          "Next": "mergeCustomAsciiFiles",
+          "Variable": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles",
+          "IsPresent": true
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "mergeCustomAsciiFiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmjayant_glue_edit_ascii_and_merge",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--inputPath.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.inputPath",
+          "--inputKeyList.$": "States.JsonToString($.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.inputKeyList)",
+          "--driverKeyList.$": "States.JsonToString($.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.driverKeyList)",
+          "--editedFilePostfix.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.editedFilePostfix",
+          "--editedFilePath.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.editedFilePath",
+          "--outputPostfix.$": "States.JsonToString($.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.outputPostfix)",
+          "--outputPath.$": "States.JsonToString($.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.outputPath)",
+          "--configKey.$": "States.JsonToString($.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.mergeCustomAsciiFiles.configKey)"
+        }
+      },
+      "ResultSelector": {
+        "Payload": {
+          "body.$": "States.JsonToString($.JobRunId)"
+        }
+      },
+      "ResultPath": "$.ArchiveLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "MergeFiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_merge_files",
+        "Payload": {
+          "s3Bucket.$": "$.StatePayload.bucket",
+          "s3Folder.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles.s3Folder",
+          "mergeFilePattern.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles.mergeFilePattern",
+          "mergedFileName.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles.mergedFileName",
+          "product.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles.product",
+          "MergeFilePrefix.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles.MergeFilePrefix",
+          "multiplePatternMerge.$": "$.StatePayload.SM_ARN_MERGEFILES.sfStepsToDone.MergeFiles.multiplePatternMerge"
+        }
+      },
+      "ResultPath": "$.ArchiveLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.Timeout"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_MERGEFILES.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Job completed successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_MERGEFILES.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_MERGEFILES.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_MERGEFILES.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "fileStatus": "Failed",
+          "sfInputFile.$": "$.StatePayload.fileName",
+          "sfOutputFile.$": "$.StatePayload.fileName",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_MERGEFILES.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_MERGEFILES.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_MERGEFILES.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_MERGEFILES.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

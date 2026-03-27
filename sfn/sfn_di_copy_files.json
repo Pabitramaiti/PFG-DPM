@@ -1,0 +1,257 @@
+{
+  "Comment": "Copy Files",
+  "StartAt": "FileNameChoice",
+  "States": {
+    "FileNameChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "CopyLambda",
+          "Variable": "$.StatePayload.SM_ARN_COPY_FILES.sfStepsToDone.copyInfo",
+          "IsPresent": true
+        },
+        {
+          "Next": "EnhancedCopyLambda",
+          "Variable": "$.StatePayload.SM_ARN_COPY_FILES.sfStepsToDone.enhancedCopy",
+          "IsPresent": true
+        }
+      ],
+      "Default": "CopyLambda"
+    },
+    "CopyLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_copy_files",
+        "Payload": {
+          "bucket.$": "$.StatePayload.bucket",
+          "fileId.$": "$.StatePayload.fileId",
+          "key.$": "$.StatePayload.key",
+          "fileName.$": "$.StatePayload.fileName",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "copyInfo.$": "$.StatePayload.SM_ARN_COPY_FILES.sfStepsToDone.copyInfo",
+          "execution_name.$": "$$.Execution.Name",
+          "execution_id.$": "$$.Execution.Id",
+          "execution_starttime.$": "$$.Execution.StartTime",
+          "statemachine_name.$": "$$.StateMachine.Name",
+          "statemachine_id.$": "$$.StateMachine.Id",
+          "state_name.$": "$$.State.Name",
+          "state_enteredtime.$": "$$.State.EnteredTime",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "applicationName.$": "$.StatePayload.applicationName",
+          "teamsId.$": "$.StatePayload.teamsId"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.copyLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "EnhancedCopyLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_enhanced_copy_files",
+        "Payload": {
+          "bucket.$": "$.StatePayload.bucket",
+          "fileId.$": "$.StatePayload.fileId",
+          "key.$": "$.StatePayload.key",
+          "fileName.$": "$.StatePayload.fileName",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "copyInfo.$": "$.StatePayload.SM_ARN_COPY_FILES.sfStepsToDone.enhancedCopy",
+          "execution_name.$": "$$.Execution.Name",
+          "execution_id.$": "$$.Execution.Id",
+          "execution_starttime.$": "$$.Execution.StartTime",
+          "statemachine_name.$": "$$.StateMachine.Name",
+          "statemachine_id.$": "$$.StateMachine.Id",
+          "state_name.$": "$$.State.Name",
+          "state_enteredtime.$": "$$.State.EnteredTime",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "applicationName.$": "$.StatePayload.applicationName",
+          "teamsId.$": "$.StatePayload.teamsId"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.copyLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_COPY_FILES.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.copyLambdaOutput.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile": " ",
+          "sfOutputFile": " ",
+          "fileStatus": "Completed",
+          "fileLog.$": "$.copyLambdaOutput.Payload.body",
+          "initStep.$": "$.StatePayload.SM_ARN_COPY_FILES.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_COPY_FILES.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_COPY_FILES.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile": " ",
+          "sfOutputFile": " ",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_COPY_FILES.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_COPY_FILES.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_COPY_FILES.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "StepFunctionsStartExecution",
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_COPY_FILES.sfNextKey",
+            "StringEquals": ""
+          }
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  },
+  "QueryLanguage": "JSONPath"
+}

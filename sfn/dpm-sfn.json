@@ -1,0 +1,174 @@
+{
+  "Comment": "brx step function's poc",
+  "StartAt": "CompressionJobChoicecheck",
+  "States": {
+    "CompressionJobChoicecheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.compression_flag",
+          "BooleanEquals": true,
+          "Next": "UncompressionGlueJob"
+        }
+      ],
+      "Default": "GlueJobChoice"
+    },
+    "UncompressionGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${uncompress_files}",
+        "Arguments": {
+          "--key.$": "$.key",
+          "--bucket.$": "$.bucket",
+          "--trackrecords.$": "$.trackrecords"
+        }
+      },
+      "ResultPath": "$.UncompressionGluejobOutput",
+      "Next": "UncompressionGlueJobStatus"
+    },
+    "UncompressionGlueJobStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.UncompressionGluejobOutput.JobRunState",
+          "StringEquals": "SUCCEEDED",
+          "Next": "GlueJobChoice"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "GlueJobChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.supplemental_flag",
+          "BooleanEquals": true,
+          "Next": "AUXGlueStartJobRun"
+        },
+        {
+          "Variable": "$.copybook_flag",
+          "BooleanEquals": true,
+          "Next": "CopyBookGlueStartJobRun"
+        },
+        {
+          "Variable": "$.driver_flag",
+          "BooleanEquals": true,
+          "Next": "DriverGlueStartJobRun"
+        }
+      ]
+    },
+    "AUXGlueStartJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${store_auxrecords_postgres}",
+        "Arguments": {
+          "--record_key.$": "$.record_key",
+          "--record_bucket.$": "$.record_bucket",
+          "--copybook_bucket.$": "$.copybook_bucket",
+          "--copybook_key.$": "$.copybook_key",
+          "--table_name.$": "$.table_name",
+          "--columns.$": "$.columns",
+          "--dbkey.$": "$.dbkey",
+          "--trackrecords.$": "$.trackrecords",
+          "--region.$": "$.region",
+          "--redefine_col.$": "$.redefine_col"
+        }
+      },
+      "ResultPath": "$.AUXGlueJobOutput",
+      "Next": "AUX GlueJob Status"
+    },
+    "AUX GlueJob Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.AUXGlueJobOutput.JobRunState",
+          "StringEquals": "SUCCEEDED",
+          "Next": "MoveZipFileLambda"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "MoveZipFileLambda": {
+      "Type": "Task",
+      "Resource": "${archive_lambda}",
+      "Parameters": {
+        "fileName.$": "$.key",
+        "sourceBucketName.$": "$.bucket",
+        "destinationBucketName.$": "$.archive_bucket"
+      },
+      "ResultPath": "$.MoveZipFileLambdaOutput",
+      "Next": "MoveZipLambdaStatus"
+    },
+    "MoveZipLambdaStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.MoveZipFileLambdaOutput.statusCode",
+          "NumericEquals": 200,
+          "Next": "Success"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "CopyBookGlueStartJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${parse_copybook_to_json}",
+        "Arguments": {
+          "--copybook_bucket.$": "$.copybook_bucket",
+          "--copybook_key.$": "$.copybook_key",
+          "--json_bucket.$": "$.json_bucket",
+          "--trackrecords.$": "$.trackrecords"
+        }
+      },
+      "ResultPath": "$.CopyBookGlueJobOutput",
+      "Next": "CopyBookGlueJobStatus"
+    },
+    "CopyBookGlueJobStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.CopyBookGlueJobOutput.JobRunState",
+          "StringEquals": "SUCCEEDED",
+          "Next": "MoveZipFileLambda"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "DriverGlueStartJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "${validate_file}",
+        "Arguments": {
+          "--client_config.$": "$.client_config",
+          "--s3_bucket_input.$": "$.s3_bucket_input",
+          "--s3_key_input.$": "$.s3_key_input",
+          "--trackrecords.$": "$.trackrecords"
+        }
+      },
+      "ResultPath": "$.DriverGlueJobOutput",
+      "Next": "DriverGlueJobStatus"
+    },
+    "DriverGlueJobStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.DriverGlueJobOutput.JobRunState",
+          "StringEquals": "SUCCEEDED",
+          "Next": "MoveZipFileLambda"
+        }
+      ],
+      "Default": "Fail"
+    }
+  }
+}

@@ -1,0 +1,348 @@
+{
+  "Comment": "Account Extraction with Client Based Glue Routing",
+  "StartAt": "AccountExtractionParallelRun",
+  "States": {
+    "AccountExtractionParallelRun": {
+      "Type": "Map",
+      "Label": "AccountExtractionParallelRun",
+      "MaxConcurrency": 20,
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:listObjectsV2",
+        "Parameters": {
+          "Bucket.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfStepsToDone.extractaccounts.bucket",
+          "Prefix.$": "States.Format('{}/{}', $.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfOutputFile, 'accounts_list_')"
+        }
+      },
+      "ItemSelector": {
+        "fileName.$": "$$.Map.Item.Value.Key",
+        "bucketName.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfStepsToDone.extractaccounts.bucket",
+        "trigger_file_name.$": "$.StatePayload.fileId",
+        "client_name.$": "$.StatePayload.clientName",
+        "client_type.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.clientType",
+        "s3_wip.$": "$.StatePayload.wipPath",
+        "extractaccounts.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfStepsToDone.extractaccounts"
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "GetFileContents",
+        "States": {
+          "GetFileContents": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_s3_operations",
+              "Payload": {
+                "bucketName.$": "$.bucketName",
+                "sourceKeys.$": "$.fileName",
+                "s3OperationType": "get_object"
+              }
+            },
+            "ResultPath": "$.fileReadResult",
+            "Next": "SelectGlueJobByClient"
+          },
+          "SelectGlueJobByClient": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.client_type",
+                "StringEquals": "type1",
+                "Next": "ClientType1"
+              },
+              {
+                "Variable": "$.client_type",
+                "StringEquals": "type2",
+                "Next": "ClientType2"
+              },
+              {
+                "Next": "ClientType3",
+                "Variable": "$.client_type",
+                "StringEquals": "type3"
+              }
+            ]
+          },
+          "ClientType3": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmdi_glue_cdm_statementdata_extraction_retail_beta",
+              "Arguments": {
+                "--partyids_list.$": "States.JsonToString($.fileReadResult.Payload.files[0].Content[0])",
+                "--sql_queries.$": "States.JsonToString($.extractaccounts.sql_queries)",
+                "--driver_layout.$": "States.JsonToString($.extractaccounts.driverlayout)",
+                "--trigger_file_name.$": "$.trigger_file_name",
+                "--client_name.$": "$.client_name",
+                "--formats.$": "States.JsonToString($.extractaccounts.formats)",
+                "--tableInfo.$": "States.JsonToString($.extractaccounts.tableInfo)",
+                "--s3_wip.$": "$.s3_wip",
+                "--bucketName.$": "$.bucketName"
+              }
+            },
+            "Next": "UpdateReconSuccess",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "UpdateReconFailed"
+              }
+            ]
+          },
+          "ClientType1": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmdi_glue_cdm_statementdata_extraction",
+              "Arguments": {
+                "--partyids_list.$": "States.JsonToString($.fileReadResult.Payload.files[0].Content[0])",
+                "--sql_queries.$": "States.JsonToString($.extractaccounts.sql_queries)",
+                "--driver_layout.$": "States.JsonToString($.extractaccounts.driverlayout)",
+                "--trigger_file_name.$": "$.trigger_file_name",
+                "--client_name.$": "$.client_name",
+                "--formats.$": "States.JsonToString($.extractaccounts.formats)",
+                "--tableInfo.$": "States.JsonToString($.extractaccounts.tableInfo)",
+                "--s3_wip.$": "$.s3_wip",
+                "--bucketName.$": "$.bucketName"
+              }
+            },
+            "ResultPath": null,
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "ResultPath": "$.ClientType1GluejobError",
+                "Next": "UpdateReconFailed"
+              }
+            ],
+            "Next": "UpdateReconSuccess"
+          },
+          "ClientType2": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmdi_glue_cdm_statementdata_extraction_retail_b228",
+              "Arguments": {
+                "--env.$": "$.extractaccounts.env",
+                "--bucketName.$": "$.bucketName",
+                "--party_section.$": "$.extractaccounts.party_section",
+                "--balance_section.$": "$.extractaccounts.balance_section",
+                "--s3_wip.$": "$.s3_wip",
+                "--batch_size.$": "$.extractaccounts.batch_size",
+                "--kafka.$": "States.JsonToString($.extractaccounts.kafka)",
+                "--summary_options.$": "States.JsonToString($.extractaccounts.summary_options)",
+                "--tableInfo.$": "States.JsonToString($.extractaccounts.tableInfo)",
+                "--sql_queries.$": "States.JsonToString($.extractaccounts.sql_queries)",
+                "--sql_section_queries.$": "States.JsonToString($.extractaccounts.sql_section_queries)",
+                "--sql_summary_section_queries.$": "States.JsonToString($.extractaccounts.sql_summary_section_queries)",
+                "--partyids_list.$": "States.JsonToString($.fileReadResult.Payload.files[0].Content[0])",
+                "--trigger_file_name.$": "$.trigger_file_name",
+                "--periodDateRange.$": "States.JsonToString($.extractaccounts.fileNameFormat.processType.periodDateRange)",
+                "--clientName.$": "$.extractaccounts.fileNameFormat.clientName"
+              }
+            },
+            "ResultPath": null,
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "ResultPath": "$.ClientType2GluejobError",
+                "Next": "UpdateReconFailed"
+              }
+            ],
+            "Next": "UpdateReconSuccess"
+          },
+          "UpdateReconSuccess": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_update_recon",
+            "Parameters": {
+              "partyids_list.$": "States.JsonToString($.fileReadResult.Payload.files[0].Content[0])",
+              "sql_queries.$": "States.JsonToString($.extractaccounts.sql_queries)",
+              "tableInfo.$": "States.JsonToString($.extractaccounts.tableInfo)",
+              "recon_status": "Success"
+            },
+            "ResultPath": "$.reconUpdateResult",
+            "Next": "SetItemStatusToSucceeded"
+          },
+          "UpdateReconFailed": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_update_recon",
+            "Parameters": {
+              "partyids_list.$": "States.JsonToString($.fileReadResult.Payload.files[0].Content[0])",
+              "sql_queries.$": "States.JsonToString($.extractaccounts.sql_queries)",
+              "tableInfo.$": "States.JsonToString($.extractaccounts.tableInfo)",
+              "recon_status": "Failed"
+            },
+            "ResultPath": "$.reconUpdateResult",
+            "Next": "SetItemStatusToFailed"
+          },
+          "SetItemStatusToSucceeded": {
+            "Type": "Pass",
+            "Result": {
+              "status": "SUCCEEDED"
+            },
+            "End": true
+          },
+          "SetItemStatusToFailed": {
+            "Type": "Pass",
+            "Result": {
+              "status": "FAILED"
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": null,
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "account is successful",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.endStep",
+          "nextstepname.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.name"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "StepFunctionsStartExecutionCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime.$": "$.StatePayload.startDateTime",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfNextKey",
+          "StringEquals": "",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_STATEMENTDATAEXTRACTION.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

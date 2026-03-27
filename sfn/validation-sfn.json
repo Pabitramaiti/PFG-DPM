@@ -1,0 +1,837 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "CheckSumCheck",
+  "States": {
+    "CheckSumCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.requiredCheckSum",
+          "IsPresent": false,
+          "Next": "validationCheck"
+        },
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_VALIDATION.requiredCheckSum",
+            "BooleanEquals": false
+          },
+          "Next": "checkSumLambda"
+        }
+      ],
+      "Default": "validationCheck"
+    },
+    "checkSumLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_checksum",
+        "Payload": {
+          "bucket_name.$": "$.StatePayload.bucket",
+          "file_key.$": "$.StatePayload.key"
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "CheckFailureMailFlag"
+        }
+      ],
+      "Next": "validationCheck",
+      "ResultPath": "$.checkSumLambdaOutPut"
+    },
+    "validationCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationXML",
+          "IsPresent": true,
+          "Next": "validationXMLGlueJob"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.validationColumner",
+          "IsPresent": true,
+          "Next": "validationColumnerGlueJob"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.PositionalValidation",
+          "IsPresent": true,
+          "Next": "PositionalValidation"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationDelimited",
+          "IsPresent": true,
+          "Next": "validationDelimitedGlueJob"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationClientSpecific",
+          "IsPresent": true,
+          "Next": "clientSpecificValidation"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON",
+          "IsPresent": true,
+          "Next": "validationJSONglue"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC",
+          "IsPresent": true,
+          "Next": "ValidationEBCDICGlueJob"
+        },
+        {
+          "Next": "dataPreparationForValidation",
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.multiFileEbcdicValidation",
+          "IsPresent": true
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationSuppFiles",
+          "IsPresent": true,
+          "Next": "ValidationSuppFilesGlueJob"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationZipFiles",
+          "IsPresent": true,
+          "Next": "ValidationZipFileJob"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.jsonTotalsValidation",
+          "IsPresent": true,
+          "Next": "jsonTotalsValidation"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.MetadataValidation",
+          "IsPresent": true,
+          "Next": "MetadataValidationGlue"
+        },
+        {
+          "Next": "GlueRecTypeValidation",
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.RecType",
+          "IsPresent": true
+        },
+        {
+          "Next": "ACKEmailLambda",
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail",
+          "IsPresent": true
+        }
+      ],
+      "Default": "Fail"
+    },
+    "GlueRecTypeValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_rec_type_validation",
+        "Arguments": {
+          "--input_file.$": "$.StatePayload.key",
+          "--input_bucket.$": "$.StatePayload.bucket",
+          "--validation_value.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.RecType.validation_value"
+        }
+      },
+      "Next": "ACKEmailLambda",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "dataPreparationForValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_multi_file_ebcdic_prep_phase",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--ebcdicPath.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.multiFileEbcdicValidation.ebcdicPath",
+          "--config_file_key.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.multiFileEbcdicValidation.config_file_key",
+          "--validation_config.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.multiFileEbcdicValidation.validation_config",
+          "--allow_empty_file.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.multiFileEbcdicValidation.allow_empty_file",
+          "--sdlc_env.$": "$.StatePayload.sdlc_env"
+        }
+      },
+      "Next": "multifileMapValidation",
+      "ResultPath": "$.Output"
+    },
+    "multifileMapValidation": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "multipleFileEbcdicValidation",
+        "States": {
+          "multipleFileEbcdicValidation": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "br_icsdev_dpmkhadkab_glue_multi_file_ebcdic_validation_phase",
+              "Arguments": {
+                "--fileName.$": "$.StatePayload.fileName",
+                "--s3_bucket.$": "$.StatePayload.bucket",
+                "--ebcdicPath.$": "$.file.ebcdicPath",
+                "--ebcdicPattern.$": "$.file.ebcdicPattern",
+                "--ebcdicKey.$": "$.file.ebcdicKey",
+                "--destination_path.$": "$.file.destination_path",
+                "--copy_flag.$": "$.file.copy_flag",
+                "--config_file_key.$": "$.file.config_file_key",
+                "--filetype.$": "$.file.filetype",
+                "--validation_config.$": "$.file.validation_config",
+                "--sdlc_env.$": "$.StatePayload.sdlc_env",
+                "--allow_empty_file.$": "$.file.allow_empty_file"
+              }
+            },
+            "Next": "multiFileValidationEnd",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "multiFileValidationError"
+              }
+            ],
+            "ResultPath": "$.Output"
+          },
+          "multiFileValidationEnd": {
+            "Type": "Pass",
+            "Result": {
+              "status": "completed",
+              "hasError": false
+            },
+            "End": true,
+            "Parameters": {
+              "file.$": "$$.Map.Item.Value",
+              "StatePayload.$": "$.StatePayload"
+            }
+          },
+          "multiFileValidationError": {
+            "Type": "Pass",
+            "End": true,
+            "Result": {
+              "status": "completed",
+              "hasError": true
+            }
+          }
+        }
+      },
+      "Next": "CheckMapResults",
+      "ItemsPath": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.multiFileEbcdicValidation.fileList",
+      "ItemSelector": {
+        "file.$": "$$.Map.Item.Value",
+        "StatePayload.$": "$.StatePayload"
+      },
+      "ResultPath": "$.mapStatus"
+    },
+    "CheckMapResults": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "checkMapFailures",
+          "Variable": "$.mapStatus",
+          "IsPresent": true
+        }
+      ],
+      "Default": "ACKEmailLambda"
+    },
+    "checkMapFailures": {
+      "Type": "Pass",
+      "Next": "checkFailures",
+      "Parameters": {
+        "hasFailures.$": "States.ArrayContains($.mapStatus[*].hasError, true)"
+      },
+      "ResultPath": "$.failureCheck"
+    },
+    "checkFailures": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "setErrorForFailures",
+          "Variable": "$.failureCheck.hasFailures",
+          "BooleanEquals": true
+        }
+      ],
+      "Default": "ACKEmailLambda"
+    },
+    "setErrorForFailures": {
+      "Type": "Pass",
+      "Next": "FailureTransactionUpdation",
+      "Parameters": {
+        "Error": "Multiple File Validation Failed",
+        "Cause": "One or more multifile validation processes failed"
+      },
+      "ResultPath": "$.errorDetails"
+    },
+    "ValidationSuppFilesGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_validating_supplementary_files",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--file_key.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationSuppFiles.file_key",
+          "--mandatory_fields.$": "States.JsonToString($.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationSuppFiles.mandatory_fields)",
+          "--primary_keys.$": "States.JsonToString($.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationSuppFiles.primary_keys)",
+          "--run_type.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationSuppFiles.run_type"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CheckFailureMailFlag",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ValidationEBCDICGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_ebcdic_validation",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--ebcdicPath.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.ebcdicPath",
+          "--ebcdicPattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.ebcdicPattern",
+          "--ebcdicKey.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.ebcdicKey",
+          "--destination_path.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.destination_path",
+          "--copy_flag.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.copy_flag",
+          "--config_file_key.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.config_file_key",
+          "--filetype.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationEBCDIC.filetype"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "MetadataValidationGlue": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmjhiconfirms_glue_metadata_validation",
+        "Arguments": {
+          "--file_name.$": "$.StatePayload.fileName",
+          "--file_key.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.MetadataValidation.file_key",
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--file_path.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.MetadataValidation.file_path",
+          "--file_pattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.MetadataValidation.file_pattern",
+          "--delimiter.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.MetadataValidation.delimiter",
+          "--metadata_config.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.MetadataValidation.metadata_config"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ValidationZipFileJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "dpmdev-di-lambda-missing_files_validation",
+        "Payload": {
+          "fileName.$": "$.StatePayload.fileName",
+          "s3_bucket.$": "$.StatePayload.bucket",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "config_path.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationZipFiles.config_path"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "validationJSONglue": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_json_validation_against_jsonschema",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--jsonSchemaPath.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.jsonSchemaPath",
+          "--jsonSchemaPattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.jsonSchemaPattern",
+          "--jsonSchemaKey.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.jsonSchemaKey",
+          "--jsonPath.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.jsonPath",
+          "--jsonPattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.jsonPattern",
+          "--jsonKey.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.jsonKey",
+          "--crossfileValidation.$": "States.JsonToString($.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationJSON.crossfileValidation)"
+        }
+      },
+      "Next": "ACKEmailLambda",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "CheckFailureMailFlag"
+        }
+      ],
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed",
+            "Glue.ConcurrentRunsExceededException"
+          ],
+          "BackoffRate": 2,
+          "MaxAttempts": 10,
+          "Comment": "retrier",
+          "IntervalSeconds": 30
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "validationXMLGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_xml_validation_against_xsd",
+        "Arguments": {
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_key_input_xml.$": "$.StatePayload.validation_source_key",
+          "--s3_key_input_xsd.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationXML.xsdPath",
+          "--s3_xsd_pattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationXML.xsdPattern",
+          "--s3_destination_key.$": "$.StatePayload.xml_destination"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ACKEmailLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_email_automation",
+        "Payload": {
+          "input_file.$": "$.StatePayload.key",
+          "skip_email_send.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.skip_email_send",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.recipient_emails",
+          "subject.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.subject",
+          "body.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.body",
+          "cc_emails.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.cc_emails",
+          "object_key.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.object_prefix",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "pattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.pattern",
+          "attachment_flag.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.attachment_flag",
+          "report_attachment_flag.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.report_attachment_flag",
+          "email_input_format.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_input_format",
+          "email_input_file.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_input_file",
+          "email_output_format.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_output_format",
+          "email_output_delimiter.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_output_delimiter"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ackEmailLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_VALIDATION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.ackEmailLambdaOutput.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_VALIDATION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_VALIDATION.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "secIndexKeyName.$": "$.StatePayload.secIndexKeyName",
+          "secIndexKeyValue.$": "$.StatePayload.secIndexKeyValue",
+          "initStep.$": "$.StatePayload.SM_ARN_VALIDATION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_VALIDATION.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "TriggernextstepfunctionChoice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_VALIDATION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_VALIDATION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_VALIDATION.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_VALIDATION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_VALIDATION.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "TriggernextstepfunctionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "Step Functions StartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Step Functions StartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_VALIDATION.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "validationColumnerGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_columnervalidator",
+        "Arguments": {
+          "--client_config.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.validationColumner.dataAttributes",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_key_input.$": "$.StatePayload.key",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--s3_output_path.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.validationColumner.outputPath"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "clientSpecificValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_clientspecific_filevalidation",
+        "Arguments": {
+          "lambdaName.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ValidationClientSpecific.lambdaArn",
+          "key.$": "$.StatePayload.validation_source_key"
+        }
+      },
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "PositionalValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_positional_validation",
+        "Arguments": {
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_VALIDATION.sfOutputFile",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--s3_return_report_config.$": "$.StatePayload.return_report_config_str"
+        }
+      },
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "validationDelimitedGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_delimited_validation",
+        "Arguments": {
+          "--s3_input_file.$": "$.StatePayload.key",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--s3_bucket_output.$": "$.StatePayload.bucket",
+          "--s3_output_file.$": "$.StatePayload.SM_ARN_VALIDATION.sfOutputFile",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--s3_return_report_config.$": "$.StatePayload.return_report_config_str"
+        }
+      },
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.Output"
+    },
+    "jsonTotalsValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmkhadkab_glue_json_totals_validation",
+        "Arguments": {
+          "--input_file_name.$": "$.StatePayload.fileName",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--total_json_file.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.jsonTotalsValidation.total_json_file"
+        }
+      },
+      "Next": "ACKEmailLambda",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "CheckFailureMailFlag": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.failureMailFlag",
+          "BooleanEquals": true,
+          "Next": "ACKEmailLambdaFailure"
+        }
+      ],
+      "Default": "FailureTransactionUpdation"
+    },
+    "ACKEmailLambdaFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmkhadkab_lmbd_email_automation",
+        "Payload": {
+          "input_file.$": "$.StatePayload.key",
+          "skip_email_send.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.skip_email_send",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.recipient_emails",
+          "subject.$": "$.errorDetails.Error",
+          "body.$": "$.errorDetails.Cause",
+          "cc_emails.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.cc_emails",
+          "object_key.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.object_prefix",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "pattern.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.pattern",
+          "attachment_flag.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.attachment_flag",
+          "email_input_format.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_input_format",
+          "email_input_file.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_input_file",
+          "email_output_format.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_output_format",
+          "email_output_delimiter.$": "$.StatePayload.SM_ARN_VALIDATION.sfStepsToDone.ACKEmail.email_output_delimiter",
+          "sfStatus": "Failed",
+          "transactionId.$": "$.StatePayload.transactionId"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ackEmailLambdaOutput",
+      "Next": "FailureTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    }
+  }
+}

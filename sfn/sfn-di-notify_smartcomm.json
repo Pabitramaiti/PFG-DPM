@@ -1,0 +1,216 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Choice",
+  "States": {
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "InvokeProspectusSmartCommAPI",
+          "Variable": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm",
+          "IsPresent": true
+        }
+      ],
+      "Default": "InvokeSmartCommAPI"
+    },
+    "InvokeProspectusSmartCommAPI": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmjayant_lmbd_notify_smartcomm_prospectus_api:$LATEST",
+        "Payload": {
+          "fileName.$": "$.StatePayload.fileName",
+          "bucketName.$": "$.StatePayload.bucket",
+          "systemName.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.systemName",
+          "folderId.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.folderId",
+          "projectName.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.projectName",
+          "filePath.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.filePath",
+          "filePattern.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.filePattern",
+          "logPath.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.logPath",
+          "logPrefix.$": "$.StatePayload.SM_ARN_INVOKESMARTCOMM.sfStepsToDone.invokeProspectusSmartcomm.logPrefix"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "SuccessTransactionUpdationChoice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.InvokeSmartCommAPIOutput"
+    },
+    "InvokeSmartCommAPI": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_notify_smartcomm_api",
+        "Payload.$": "$"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "SuccessTransactionUpdationChoice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.InvokeSmartCommAPIOutput"
+    },
+    "SuccessTransactionUpdationChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.InvokeSmartCommAPIOutput.Payload.statusCode",
+              "NumericEquals": 200
+            },
+            {
+              "Variable": "$.InvokeSmartCommAPIOutput.Payload.statusCode",
+              "NumericEquals": 201
+            }
+          ],
+          "Next": "SuccessTransactionUpdation"
+        }
+      ],
+      "Default": "FailureTransactionUpdation"
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.initStep",
+          "endStep.$": "$.StatePayload.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.InvokeSmartCommAPIOutput.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime.$": "$..Output.SdkHttpMetadata.AllHttpHeaders.Date",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.initStep",
+          "endStep.$": "$.StatePayload.endStep",
+          "timestampinminutes.$": "$.StatePayload.timestampinminutes",
+          "nextstepname.$": "$.StatePayload.nextstepname",
+          "createFileMonitorFlag.$": "$.StatePayload.createFileMonitorFlag",
+          "fileExpiryDurationInMinutes.$": "$.StatePayload.fileExpiryDurationInMinutes"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed",
+      "Comment": "notified to SmartComm"
+    },
+    "Fail": {
+      "Type": "Fail",
+      "Comment": "failed notified to SmartComm"
+    }
+  }
+}

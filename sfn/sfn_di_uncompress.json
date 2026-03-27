@@ -1,0 +1,215 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Uncompressioncheck",
+  "States": {
+    "Uncompressioncheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.uncompress_flag",
+          "BooleanEquals": true,
+          "Next": "StartUncompressGlueJOb"
+        }
+      ],
+      "Default": "decryptCheck"
+    },
+    "StartUncompressGlueJOb": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmtest_glue_uncompress_files",
+        "Arguments": {
+          "--key.$": "$.StatePayload.key",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--trackrecords.$": "$.StatePayload.trackrecords",
+          "--inputdestination.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfStepsToDone.unzip.inputZipDestination",
+          "--outputdestination.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfStepsToDone.unzip.unzipFileDestination"
+        }
+      },
+      "ResultPath": "$.UncompressionGluejobOutput",
+      "Next": "decryptCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed",
+            "Glue.ConcurrentRunsExceededException"
+          ],
+          "BackoffRate": 2,
+          "MaxAttempts": 10,
+          "Comment": "retrier",
+          "IntervalSeconds": 30
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmtest_pp_transactions:$LATEST",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.transactioninputfile",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Completed Successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecution",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        }
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.transactioninputfile",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime.$": "$.StatePayload.startDateTime",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_UNCOMPRESSION.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        },
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmtest_pp_transactions:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.FailureTransactionUpdation.Output"
+    },
+    "decryptCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.StatePayload.decrypt_flag",
+              "BooleanEquals": true
+            }
+          ],
+          "Next": "StartdecryptGlueJob"
+        }
+      ],
+      "Default": "SuccessTransactionUpdation"
+    },
+    "StartdecryptGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "myDecryptJobName"
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

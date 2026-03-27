@@ -1,0 +1,280 @@
+{
+  "Comment": "Enterprise Polling Orchestrator - Root Level Execution Context",
+  "StartAt": "Initialize",
+  "TimeoutSeconds": 21600,
+  "States": {
+    "Initialize": {
+      "Type": "Pass",
+      "Parameters": {
+        "pollingAttempt": 0,
+        "shouldContinue": true,
+        "lambdaCursorIndex": 0,
+        "lambdaCount.$": "States.ArrayLength($.StatePayload.LambdaParams)",
+        "PersistStateParams": {},
+        "StatePayload.$": "$.StatePayload"
+      },
+      "Next": "LambdaLoopCheck"
+    },
+    "LambdaLoopCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.lambdaCursorIndex",
+          "NumericGreaterThanEqualsPath": "$.lambdaCount",
+          "Next": "IncrementPollingAttempt"
+        }
+      ],
+      "Default": "SelectCurrentLambda"
+    },
+    "SelectCurrentLambda": {
+      "Type": "Pass",
+      "Parameters": {
+        "CurrentLambda.$": "States.ArrayGetItem($.StatePayload.LambdaParams, $.lambdaCursorIndex)",
+        "pollingAttempt.$": "$.pollingAttempt",
+        "shouldContinue.$": "$.shouldContinue",
+        "lambdaCursorIndex.$": "$.lambdaCursorIndex",
+        "lambdaCount.$": "$.lambdaCount",
+        "PersistStateParams.$": "$.PersistStateParams",
+        "StatePayload.$": "$.StatePayload"
+      },
+      "Next": "InvokeLambda"
+    },
+    "InvokeLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName.$": "$.CurrentLambda.FunctionName",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "PollingParams": {
+            "pollingAttempt.$": "$.pollingAttempt"
+          },
+          "LambdaConfig.$": "$.CurrentLambda.BusinessPayload",
+          "PersistedState.$": "$.PersistStateParams"
+        }
+      },
+      "ResultSelector": {
+        "persistToState.$": "$.Payload.persistToState",
+        "shouldContinue.$": "$.Payload.shouldContinue"
+      },
+      "ResultPath": "$.lambdaResult",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ],
+      "Next": "ShouldContinueCheck"
+    },
+    "ShouldContinueCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.lambdaResult.shouldContinue",
+          "IsNull": true,
+          "Next": "ReplaceStateKeepPrevious"
+        }
+      ],
+      "Default": "ReplaceStateUseLatest"
+    },
+    "ReplaceStateKeepPrevious": {
+      "Type": "Pass",
+      "Parameters": {
+        "pollingAttempt.$": "$.pollingAttempt",
+        "shouldContinue.$": "$.shouldContinue",
+        "lambdaCursorIndex.$": "States.MathAdd($.lambdaCursorIndex, 1)",
+        "lambdaCount.$": "$.lambdaCount",
+        "PersistStateParams.$": "$.lambdaResult.persistToState",
+        "StatePayload.$": "$.StatePayload"
+      },
+      "Next": "LambdaLoopCheck"
+    },
+    "ReplaceStateUseLatest": {
+      "Type": "Pass",
+      "Parameters": {
+        "pollingAttempt.$": "$.pollingAttempt",
+        "shouldContinue.$": "$.lambdaResult.shouldContinue",
+        "lambdaCursorIndex.$": "States.MathAdd($.lambdaCursorIndex, 1)",
+        "lambdaCount.$": "$.lambdaCount",
+        "PersistStateParams.$": "$.lambdaResult.persistToState",
+        "StatePayload.$": "$.StatePayload"
+      },
+      "Next": "LambdaLoopCheck"
+    },
+    "IncrementPollingAttempt": {
+      "Type": "Pass",
+      "Parameters": {
+        "pollingAttempt.$": "States.MathAdd($.pollingAttempt, 1)",
+        "shouldContinue.$": "$.shouldContinue",
+        "lambdaCursorIndex": 0,
+        "lambdaCount.$": "$.lambdaCount",
+        "PersistStateParams": {},
+        "StatePayload.$": "$.StatePayload"
+      },
+      "Next": "PollingDecision"
+    },
+    "PollingDecision": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.shouldContinue",
+          "BooleanEquals": false,
+          "Next": "SuccessTransactionUpdation"
+        },
+        {
+          "Variable": "$.pollingAttempt",
+          "NumericGreaterThanEqualsPath": "$.StatePayload.PollingParams.maxPollAttempts",
+          "Next": "SuccessTransactionUpdation"
+        }
+      ],
+      "Default": "WaitBeforeNextPollingCycle"
+    },
+    "WaitBeforeNextPollingCycle": {
+      "Type": "Wait",
+      "SecondsPath": "$.StatePayload.PollingParams.intervalSeconds",
+      "Next": "LambdaLoopCheck"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "stepFunctions": [
+            {
+              "arnStepName": "Polling",
+              "sfInstance.$": "$$.Execution.Id",
+              "sfStatus": "Succeeded"
+            }
+          ],
+          "arnStepName": "POLLING_SFN",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Polling completed successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile": "",
+          "fileStatus": "Completed",
+          "fileLog": "",
+          "inputPath.$": "$.StatePayload.inputPath",
+          "initStep": "False",
+          "endStep": "False"
+        }
+      },
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Next": "StepFunctionsStartExecutionCheck",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_POLLINGSFN.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_POLLINGSFN.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload",
+          "parentExecutionId.$": "$$.Execution.Id"
+        }
+      },
+      "ResultPath": "$.NextStateMachine",
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$$.State.EnteredTime",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "stepFunctions": [
+            {
+              "arnStepName": "Polling",
+              "sfInstance.$": "$$.Execution.Id",
+              "sfStatus": "Failed"
+            }
+          ],
+          "arnStepName": "POLLING_SFN",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile": "",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Next": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

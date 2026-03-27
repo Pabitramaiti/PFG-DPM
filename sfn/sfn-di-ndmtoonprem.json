@@ -1,0 +1,185 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "ndmjson",
+  "States": {
+    "ndmjson": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName.$": "$.StatePayload.NDM_TARGET_LAMBDA",
+        "Payload": {
+          "bucket.$": "$.StatePayload.bucket",
+          "object.$": "$.StatePayload.key",
+          "ndmFilePath.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfStepsToDone.ndmjson.ndmFilePath",
+          "ndmFilePattern.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfStepsToDone.ndmjson.ndmFilePattern",
+          "moveFlag.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfStepsToDone.ndmjson.moveFlag",
+          "execution_name.$": "$$.Execution.Name",
+          "execution_id.$": "$$.Execution.Id",
+          "execution_starttime.$": "$$.Execution.StartTime",
+          "statemachine_name.$": "$$.StateMachine.Name",
+          "statemachine_id.$": "$$.StateMachine.Id",
+          "state_name.$": "$$.State.Name",
+          "state_enteredtime.$": "$$.State.EnteredTime",
+          "transactionId.$": "$.StatePayload.transactionId",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "applicationName.$": "$.StatePayload.applicationName",
+          "teamsId.$": "$.StatePayload.teamsId",
+          "ndmjsonparams.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfParams"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 30,
+          "MaxAttempts": 3,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.ndmtojson"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.inputFile",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_NDMTOONPREM.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.ndmtojson.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_NDMTOONPREM.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_NDMTOONPREM.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 30,
+          "MaxAttempts": 3,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.inputFile",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_NDMTOONPREM.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime.$": "$.StatePayload.startDateTime",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_NDMTOONPREM.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_NDMTOONPREM.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Next": "Fail"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_NDMTOONPREM.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_NDMTOONPREM.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

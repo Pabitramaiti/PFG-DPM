@@ -1,0 +1,321 @@
+{
+  "Comment": "Step Function running and terminating the brx container as tasks on ECS based on file name triggers",
+  "StartAt": "FileNameCheck",
+  "States": {
+    "FileNameCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.fileName",
+          "StringMatches": "*starttask",
+          "Next": "RunAllEcsTasks"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.StatePayload.fileName",
+              "StringMatches": "*failed"
+            },
+            {
+              "Variable": "$.StatePayload.fileName",
+              "StringMatches": "*success"
+            }
+          ],
+          "Next": "StopTasksLambda"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "StopTasksLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmrajnishk_lmbd_brxtask_trigger",
+        "Payload": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "ResultSelector": {
+        "ecsResults.$": "$.Payload.stoppedTasks"
+      },
+      "ResultPath": "$.ecsResults",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "RunAllEcsTasks": {
+      "Type": "Map",
+      "ItemsPath": "$.StatePayload.TASK_LIST",
+      "MaxConcurrency": 0,
+      "ItemSelector": {
+        "cluster.$": "$$.Map.Item.Value.cluster",
+        "task_definition.$": "$$.Map.Item.Value.task_definition",
+        "container_name.$": "$$.Map.Item.Value.container_name",
+        "task_index.$": "$$.Map.Item.Index",
+        "retryCount": 0
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "LaunchTask",
+        "States": {
+          "LaunchTask": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::ecs:runTask",
+            "Parameters": {
+              "Cluster.$": "$.cluster",
+              "TaskDefinition.$": "$.task_definition",
+              "LaunchType": "EC2"
+            },
+            "ResultPath": "$.launchResult",
+            "Next": "CheckLaunchSuccess",
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "ResultPath": "$.launchError",
+                "Next": "TaskLaunchFailed"
+              }
+            ]
+          },
+          "CheckLaunchSuccess": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.launchResult.Tasks[0]",
+                "IsPresent": true,
+                "Next": "WaitForTaskStart"
+              },
+              {
+                "And": [
+                  {
+                    "Variable": "$.launchResult.Failures[0]",
+                    "IsPresent": true
+                  },
+                  {
+                    "Variable": "$.retryCount",
+                    "NumericLessThan": 10
+                  }
+                ],
+                "Next": "IncrementRetry"
+              }
+            ],
+            "Default": "TaskLaunchFailed"
+          },
+          "IncrementRetry": {
+            "Type": "Pass",
+            "Parameters": {
+              "cluster.$": "$.cluster",
+              "task_definition.$": "$.task_definition",
+              "container_name.$": "$.container_name",
+              "task_index.$": "$.task_index",
+              "retryCount.$": "States.MathAdd($.retryCount, 1)"
+            },
+            "Next": "WaitBeforeRetry"
+          },
+          "WaitBeforeRetry": {
+            "Type": "Wait",
+            "Seconds": 30,
+            "Next": "LaunchTask"
+          },
+          "WaitForTaskStart": {
+            "Type": "Wait",
+            "Seconds": 10,
+            "Next": "VerifyTaskRunning"
+          },
+          "VerifyTaskRunning": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:ecs:describeTasks",
+            "Parameters": {
+              "Cluster.$": "$.cluster",
+              "Tasks.$": "States.Array($.launchResult.Tasks[0].TaskArn)"
+            },
+            "ResultPath": "$.verifyResult",
+            "Next": "CheckIfRunning",
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "ResultPath": "$.verifyError",
+                "Next": "TaskVerifyFailed"
+              }
+            ]
+          },
+          "CheckIfRunning": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.verifyResult.Tasks[0].LastStatus",
+                "StringEquals": "RUNNING",
+                "Next": "TaskStartVerified"
+              },
+              {
+                "Variable": "$.verifyResult.Tasks[0].LastStatus",
+                "StringEquals": "PROVISIONING",
+                "Next": "TaskStartVerified"
+              },
+              {
+                "Variable": "$.verifyResult.Tasks[0].LastStatus",
+                "StringEquals": "PENDING",
+                "Next": "TaskStartVerified"
+              }
+            ],
+            "Default": "TaskStartFailed"
+          },
+          "TaskStartVerified": {
+            "Type": "Pass",
+            "Parameters": {
+              "verified": true,
+              "taskArn.$": "$.launchResult.Tasks[0].TaskArn",
+              "status.$": "$.verifyResult.Tasks[0].LastStatus",
+              "task_definition.$": "$.task_definition",
+              "container_name.$": "$.container_name"
+            },
+            "End": true
+          },
+          "TaskStartFailed": {
+            "Type": "Fail",
+            "Error": "TaskVerificationFailed",
+            "Cause": "Task failed to reach RUNNING state"
+          },
+          "TaskLaunchFailed": {
+            "Type": "Fail",
+            "Error": "TaskLaunchFailed",
+            "Cause": "Failed to launch ECS task"
+          },
+          "TaskVerifyFailed": {
+            "Type": "Fail",
+            "Error": "TaskVerifyFailed",
+            "Cause": "Failed to verify task status"
+          }
+        }
+      },
+      "ResultPath": "$.ecsResults",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName": "BRXTRIGGERSFN",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Tasks processed successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile": "",
+          "fileStatus": "Completed",
+          "fileLog": "",
+          "ecsTasks.$": "$.ecsResults",
+          "initStep.$": "$.StatePayload.SM_ARN_BRXTRIGGERSFN.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BRXTRIGGERSFN.endStep"
+        }
+      },
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Next": "StepFunctionsStartExecutionCheck",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_BRXTRIGGERSFN.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_BRXTRIGGERSFN.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "ResultPath": "$.NextStateMachine",
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName": "BRXTRIGGERSFN",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile": "",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_BRXTRIGGERSFN.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BRXTRIGGERSFN.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Next": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

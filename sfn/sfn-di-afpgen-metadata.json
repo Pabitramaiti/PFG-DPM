@@ -1,0 +1,224 @@
+{
+  "Comment": "dpmdi_sfn_afp-metadata",
+  "StartAt": "Choice",
+  "States": {
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Bypass afpgen",
+          "And": [
+            {
+              "Variable": "$.StatePayload.SM_ARN_METADATA.bypass_afpgen",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.StatePayload.SM_ARN_METADATA.bypass_afpgen",
+              "BooleanEquals": true
+            }
+          ]
+        }
+      ],
+      "Default": "Afpgen Metadata"
+    },
+    "Bypass afpgen": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:556144470667:function:br_icsqa_dpmdi_lmbd_bypass_afpgen",
+        "Payload": {
+          "corp_table_name.$": "$.StatePayload.SM_ARN_METADATA.corp_table_name",
+          "cycle_table_name.$": "$.StatePayload.SM_ARN_METADATA.cycle_table_name",
+          "key.$": "$.StatePayload.key",
+          "clientName.$": "$.StatePayload.clientName",
+          "bucket.$": "$.StatePayload.bucket",
+          "transactionId.$": "$.StatePayload.transactionId"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Next": "Step Functions StartExecution",
+      "ResultPath": "$.bypass_output"
+    },
+    "Step Functions StartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_METADATA.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Next": "Success",
+      "ResultPath": "$.stepFuntions"
+    },
+    "Afpgen Metadata": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsqa_dpmdi_glue_afpgen_metadata",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--s3_bucket_input.$": "$.StatePayload.bucket",
+          "--key.$": "$.StatePayload.key",
+          "--comunicationId.$": "$.StatePayload.clientID",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--transactionId.$": "$.StatePayload.transactionId",
+          "--cluster_name.$": "$.StatePayload.SM_ARN_METADATA.cluster_name",
+          "--task_definition_name.$": "$.StatePayload.SM_ARN_METADATA.task_definition_name",
+          "--producerPublishUrl.$": "$.StatePayload.SM_ARN_METADATA.producerPublishUrl",
+          "--container_name.$": "$.StatePayload.SM_ARN_METADATA.container_name"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "ResultPath": "$.metadata_output"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:556144470667:function:br_icsqa_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_METADATA.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "METADATA glue job completed",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.fileName",
+          "sfOutputFile.$": "$.StatePayload.fileName",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_METADATA.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_METADATA.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:556144470667:function:br_icsqa_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.inputFile",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_METADATA.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime.$": "$.StatePayload.startDateTime",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_METADATA.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_METADATA.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_METADATA.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_METADATA.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

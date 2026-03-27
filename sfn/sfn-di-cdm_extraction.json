@@ -1,0 +1,191 @@
+{
+  "Comment": "Module for different types of conversions",
+  "StartAt": "cdm-extraction",
+  "States": {
+    "cdm-extraction": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmpf_glue_cdm_extraction",
+        "Arguments": {
+          "--input_filename.$": "$.StatePayload.fileId",
+          "--input_bucket.$": "$.StatePayload.bucket",
+          "--input_folder.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.input_folder",
+          "--single_party_account_type.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.single_party_account_type",
+          "--group_party_account_type.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.group_party_account_type",
+          "--hh_party_account_type.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.hh_party_account_type",
+          "--master_party_contact_type.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.master_party_contact_type",
+          "--sister_party_contact_type.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.sister_party_contact_type",
+          "--summary_party_contact_type_kafka.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.summary_party_contact_type_kafka",
+          "--party_section.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.party_section",
+          "--balance_section.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.balance_section",
+          "--s3_wip.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.wipPath",
+          "--kafka_topic.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.kafka_topic",
+          "--region.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.region",
+          "--dbkey.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.dbkey",
+          "--dbname.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.dbname",
+          "--schema.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.schema",
+          "--batch_size.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.batch_size",
+          "--schema_set_query.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.schema_set_query",
+          "--summary_option.$": "States.JsonToString($.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.summary_option)",
+          "--function_call_query.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.function_call_query",
+          "--periodDateRange.$": "States.JsonToString($.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.fileNameFormat.processType.periodDateRange)",
+          "--clientName.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.fileNameFormat.clientName",
+          "--runType.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.runType",
+          "--temp_account_details_query.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.temp_account_details_query",
+          "--hh_advisor_query.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.hh_advisor_query",
+          "--query_dic.$": "States.JsonToString($.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.query_dic)",
+          "--summary_query.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.summary_query",
+          "--hh_summary_query.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.tableInfo.hh_summary_query",
+          "--kafka_endpoints.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.kafka_endpoints",
+          "--kafka_username.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.kafka_username",
+          "--kafka_password.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.kafka_password",
+          "--aqa_report_glue_job_name.$": "States.JsonToString($.StatePayload.SM_ARN_BRXEXTRACTION.sfStepsToDone.createbrxextractiondata.['aqa_report_glue_job_name','dummy_parameter'])"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmpf_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "Extraction job completed successfully",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "StepFunctionsStartExecutionCheck",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmpf_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail",
+      "ResultPath": "$.UpdateTransactionTableLambdaOutput"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "StepFunctionsStartExecutionCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_BRXEXTRACTION.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

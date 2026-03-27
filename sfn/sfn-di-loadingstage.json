@@ -1,0 +1,454 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "loadCheck",
+  "States": {
+    "loadCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage",
+          "IsPresent": true,
+          "Next": "GlueLoadingToDatabase"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage",
+          "IsPresent": true,
+          "Next": "headerLoad"
+        },
+        {
+          "Next": "csvLoadStage",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.csvLoadStage",
+          "IsPresent": true
+        },
+        {
+          "Next": "delimitedLoad",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage",
+          "IsPresent": true
+        },
+        {
+          "Next": "DynamicLoadToDB",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB",
+          "IsPresent": true
+        },
+        {
+          "Next": "EnhancedLoadToDB",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB",
+          "IsPresent": true
+        },
+        {
+          "Next": "SelectToInsert",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert",
+          "IsPresent": true
+        },
+        {
+          "Next": "SelectToCsv",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToCsv",
+          "IsPresent": true
+        },
+        {
+          "Next": "EnhancedLoadToDB_Spark",
+          "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark",
+          "IsPresent": true
+        }
+      ],
+      "Default": "GlueLoadingToDatabase"
+    },
+    "headerLoad": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_header_loadstage",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--key.$": "$.StatePayload.key",
+          "--file_name.$": "$.StatePayload.fileName",
+          "--table_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.table_name",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.dbkey",
+          "--base_file_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.base_file_name",
+          "--columns.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.columns",
+          "--replica.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.replica",
+          "--client_id.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.client_id",
+          "--json_loader_path.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.json_loader_path",
+          "--multiple_data.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.multiple_data",
+          "--identifer.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.identifer",
+          "--header.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.header",
+          "--schema.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.schema",
+          "--database.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.headerStage.database"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.AUXGlueJobOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "csvLoadStage": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_csv_loadstage",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--object_key.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.csvLoadStage.object_key",
+          "--file_name.$": "$.StatePayload.fileName",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.csvLoadStage.dbkey",
+          "--region.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.csvLoadStage.region",
+          "--key_location.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.csvLoadStage.key_location"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.AUXGlueJobOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "delimitedLoad": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_delimited_loadstage",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--object_key.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage.object_key",
+          "--file_name.$": "$.StatePayload.fileName",
+          "--batch_size.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage.batch_size",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage.dbkey",
+          "--base_file_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage.base_file_name",
+          "--region.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage.region",
+          "--key_location.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.delimitedLoadStage.key_location"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.AUXGlueJobOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "GlueLoadingToDatabase": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_loadstage",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--object_key.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.object_key",
+          "--file_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.fileName",
+          "--key.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.key",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.dbkey",
+          "--batch_size.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.batch_size",
+          "--base_file_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.base_file_name",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--key_location.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStage.key_location"
+        }
+      },
+      "ResultPath": "$.AUXGlueJobOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "EnhancedLoadToDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_enhanced_dual_loadstage",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--databaseName.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.databaseName",
+          "--databaseSMKey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.databaseSMKey",
+          "--databaseSchema.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.databaseSchema",
+          "--enableParallelProcessing.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.enableParallelProcessing",
+          "--maxWorkers.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.maxWorkers",
+          "--backup_retention_count.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.backup_retention_count",
+          "--batch_size.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.batch_size",
+          "--filesToProcess.$": "States.JsonToString($.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.filesToProcess)",
+          "--loadStageConfig.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB.loadStageConfig"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.EnhancedDualOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "EnhancedLoadToDB_Spark": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_enhanced_spark_loadstage",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucketName.$": "$.StatePayload.bucket",
+          "--databaseName.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.databaseName",
+          "--databaseSMKey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.databaseSMKey",
+          "--databaseSchema.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.databaseSchema",
+          "--enableParallelProcessing.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.enableParallelProcessing",
+          "--maxWorkers.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.maxWorkers",
+          "--backup_retention_count.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.backup_retention_count",
+          "--batch_size.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.batch_size",
+          "--filesToProcess.$": "States.JsonToString($.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.filesToProcess)",
+          "--loadStageConfig.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.EnhancedLoadToDB_Spark.loadStageConfig"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.EnhancedDualOutput_JHI_DEMO",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileName",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_LOADSTAGE.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload..sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_LOADSTAGE.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_LOADSTAGE.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileName",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_LOADSTAGE.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "in progress",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_LOADSTAGE.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_LOADSTAGE.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "Choice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_LOADSTAGE.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "DynamicLoadToDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_configurable_load_stage",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--object_key.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.object_key",
+          "--table_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.table_name",
+          "--file_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.file_name",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.dbkey",
+          "--base_file_name.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.base_file_name",
+          "--region.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.region",
+          "--columns.$": "States.JsonToString($.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.columns)",
+          "--replica.$": "States.JsonToString($.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.replica)",
+          "--table_creation_type.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.LoadStageToDB.table_creation_type",
+          "--client_id.$": "$.StatePayload.SM_ARN_CONVERSION.sfStepsToDone.createb1config.client_id"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "SelectToInsert": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_batch_select_to_insert",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--table_config_path.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert.table_config_path",
+          "--delete_source_table.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert.delete_source_table",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert.dbkey",
+          "--sql_query.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert.sql_query",
+          "--move_table_if_exists.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert.move_table_if_exists",
+          "--schema.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToInsert.schema"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "SelectToCsv": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_pathfinder_select_to_csv",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--table_config_path.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToCsv.table_config_path",
+          "--dbkey.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToCsv.dbkey",
+          "--sql_query_config.$": "States.JsonToString($.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToCsv.sql_query_config)",
+          "--batch_size.$": "$.StatePayload.SM_ARN_LOADSTAGE.sfStepsToDone.SelectToCsv.batch_size"
+        }
+      },
+      "Next": "SuccessTransactionUpdation",
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    }
+  }
+}

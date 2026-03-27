@@ -1,0 +1,353 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "validationCheck",
+  "States": {
+    "validationCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.PostValidationEBCDIC_post",
+          "IsPresent": true,
+          "Next": "PostValidationEBCDIC_post"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.postgressQueryValidation",
+          "IsPresent": true,
+          "Next": "postgressQueryValidation"
+        },
+        {
+          "Variable": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail",
+          "IsPresent": true,
+          "Next": "ACKEmailLambda"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "PostValidationEBCDIC_post": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_post_validation",
+        "Arguments": {
+          "--fileName.$": "$.StatePayload.fileName",
+          "--s3_bucket.$": "$.StatePayload.bucket",
+          "--config_file.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.PostValidationEBCDIC_post.config_file",
+          "--ascii_file_path.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.PostValidationEBCDIC_post.ascii_file_path",
+          "--output_folder.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.PostValidationEBCDIC_post.output_folder"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CheckFailureMailFlag",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "CheckFailureMailFlag": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.failureMailFlag",
+          "BooleanEquals": true,
+          "Next": "ACKEmailLambdaFailure"
+        }
+      ],
+      "Default": "FailureTransactionUpdation"
+    },
+    "ACKEmailLambdaFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_email_automation",
+        "Payload": {
+          "input_file.$": "$.StatePayload.key",
+          "skip_email_send.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.skip_email_send",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.recipient_emails",
+          "subject.$": "$.errorDetails.Error",
+          "body.$": "$.errorDetails.Cause",
+          "cc_emails.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.cc_emails",
+          "object_key.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.object_prefix",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "pattern.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.pattern",
+          "attachment_flag.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.attachment_flag",
+          "email_input_format.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_input_format",
+          "email_input_file.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_input_file",
+          "email_output_format.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_output_format",
+          "email_output_delimiter.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_output_delimiter",
+          "sfStatus": "Failed",
+          "transactionId.$": "$.StatePayload.transactionId"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ackEmailLambdaOutput",
+      "Next": "FailureTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "postgressQueryValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_post_query_validation",
+        "Arguments": {
+          "--inputFileName.$": "$.StatePayload.fileName",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--database_name.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.postgressQueryValidation.database_name",
+          "--database_ssm_key.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.postgressQueryValidation.database_ssm_key",
+          "--database_schema.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.postgressQueryValidation.database_schema",
+          "--report_key.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.postgressQueryValidation.report_key",
+          "--config_key.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.postgressQueryValidation.config_key"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "ACKEmailLambda",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Notification_Mail",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Notification_Mail": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmjayant_lmbd_email_notification_report",
+        "Payload": {
+          "sender_email.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.sender_email",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.recipient_emails",
+          "cc_emails.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.cc_emails",
+          "subject.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.subject",
+          "body_text.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.body_text",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "add_timestamp_in_subject.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.add_timestamp_in_subject",
+          "add_timestamp_in_body.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.add_timestamp_in_body",
+          "attachment_files.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.Notification_Mail.attachment_files"
+        }
+      },
+      "ResultSelector": {
+        "statusCode.$": "$.Payload.statusCode",
+        "body.$": "$.Payload.body"
+      },
+      "ResultPath": "$.emailResult",
+      "Next": "FailureTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "ACKEmailLambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_email_automation",
+        "Payload": {
+          "input_file.$": "$.StatePayload.key",
+          "skip_email_send.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.skip_email_send",
+          "recipient_emails.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.recipient_emails",
+          "subject.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.subject",
+          "body.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.body",
+          "cc_emails.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.cc_emails",
+          "object_key.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.object_prefix",
+          "bucket_name.$": "$.StatePayload.bucket",
+          "pattern.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.pattern",
+          "attachment_flag.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.attachment_flag",
+          "email_input_format.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_input_format",
+          "email_input_file.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_input_file",
+          "email_output_format.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_output_format",
+          "email_output_delimiter.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfStepsToDone.ACKEmail.email_output_delimiter"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ackEmailLambdaOutput",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errorDetails",
+          "Next": "FailureTransactionUpdation"
+        }
+      ]
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileId",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_POST_VALIDATION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog.$": "$.ackEmailLambdaOutput.Payload.body",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfOutputFile",
+          "fileStatus": "isprocessing",
+          "fileLog": "",
+          "secIndexKeyName.$": "$.StatePayload.secIndexKeyName",
+          "secIndexKeyValue.$": "$.StatePayload.secIndexKeyValue",
+          "initStep.$": "$.StatePayload.SM_ARN_POST_VALIDATION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_POST_VALIDATION.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "TriggernextstepfunctionChoice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "fileId.$": "$.StatePayload.fileId",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime.$": "$.StatePayload.startDateTime",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_POST_VALIDATION.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_POST_VALIDATION.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_POST_VALIDATION.endStep",
+          "inputPath.$": "$.StatePayload.inputPath"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "TriggernextstepfunctionChoice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_POST_VALIDATION.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "Step Functions StartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Step Functions StartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_POST_VALIDATION.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

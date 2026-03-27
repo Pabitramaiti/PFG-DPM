@@ -1,0 +1,255 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "load_choice",
+  "States": {
+    "load_choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Kafka_load_batch",
+          "Variable": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch",
+          "IsPresent": true
+        },
+        {
+          "Next": "kafkaload_file_exchange",
+          "Variable": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange",
+          "IsPresent": true
+        }
+      ],
+      "Default": "Kafkaload"
+    },
+    "Kafkaload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmdi_glue_kafkaload",
+        "Arguments": {
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--file_name.$": "$.StatePayload.fileName",
+          "--send_folder.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.send_folder",
+          "--save_folder.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.save_folder",
+          "--failed_folder.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.failed_folder",
+          "--topic_name.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.topic_name",
+          "--region.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.region",
+          "--execution_name.$": "$$.Execution.Name",
+          "--execution_id.$": "$$.Execution.Id",
+          "--execution_starttime.$": "$$.Execution.StartTime",
+          "--statemachine_name.$": "$$.StateMachine.Name",
+          "--statemachine_id.$": "$$.StateMachine.Id",
+          "--state_name.$": "$$.State.Name",
+          "--state_enteredtime.$": "$$.State.EnteredTime",
+          "--clientName.$": "$.StatePayload.clientName",
+          "--clientID.$": "$.StatePayload.clientID",
+          "--applicationName.$": "$.StatePayload.applicationName",
+          "--teamsId.$": "$.StatePayload.teamsId",
+          "--file_formats.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.file_formats",
+          "--kafka_url_parameter.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load.kafka_url_parameter"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Next": "SuccessTransactionUpdation",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "FailureTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileName",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_KAFKA.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Failed",
+          "sfLog.$": "$.errorDetails.Cause",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "Failed",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_KAFKA.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_KAFKA.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.FailureTransactionUpdationOutput",
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "SuccessTransactionUpdation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:187777304606:function:br_icsdev_dpmdi_lmbd_transactions",
+        "Payload": {
+          "transactionId.$": "$.StatePayload.transactionId",
+          "fileName.$": "$.StatePayload.fileName",
+          "isRejected.$": "$.StatePayload.isRejected",
+          "fileId.$": "$.StatePayload.fileName",
+          "startDateTime.$": "$.StatePayload.startDateTime",
+          "endDateTime": "",
+          "stepFunctions.$": "$.StatePayload.stepFunctions",
+          "clientName.$": "$.StatePayload.clientName",
+          "clientID.$": "$.StatePayload.clientID",
+          "documentType.$": "$.StatePayload.documentType",
+          "arnStepName.$": "$.StatePayload.SM_ARN_KAFKA.name",
+          "sfInstance.$": "$$.Execution.Id",
+          "sfStatus": "Succeeded",
+          "sfLog": "",
+          "sfStartTime.$": "$$.Execution.StartTime",
+          "sfEndTime": "",
+          "sfInputFile.$": "$.StatePayload.sfInputFile",
+          "sfOutputFile.$": "$.StatePayload.sfOutputFile",
+          "fileStatus": "in progress",
+          "fileLog": "",
+          "initStep.$": "$.StatePayload.SM_ARN_KAFKA.initStep",
+          "endStep.$": "$.StatePayload.SM_ARN_KAFKA.endStep"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.SuccessTransactionUpdationOutput",
+      "Next": "Choice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ]
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.StatePayload.SM_ARN_KAFKA.sfNextKey",
+            "StringEquals": ""
+          },
+          "Next": "StepFunctionsStartExecution"
+        }
+      ],
+      "Default": "Success"
+    },
+    "StepFunctionsStartExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn.$": "$.StatePayload.SM_ARN_KAFKA.sfNextKey",
+        "Input": {
+          "StatePayload.$": "$.StatePayload"
+        }
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "kafkaload_file_exchange": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmpathfinder_glue_kafkaload_file_exchange",
+        "Arguments": {
+          "--password.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.password",
+          "--kafka_host.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.kafka_host",
+          "--bucket.$": "$.StatePayload.bucket",
+          "--filename.$": "$.StatePayload.fileName",
+          "--file_path.$": "$.StatePayload.key",
+          "--topic.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.topic",
+          "--user_name.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.user_name",
+          "--region.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.region",
+          "--expected_duration.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.expected_duration",
+          "--consumer_interval.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafkaload_file_exchange.consumer_interval"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation"
+    },
+    "Kafka_load_batch": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "br_icsdev_dpmpathfinder_glue_kafkaload-batch",
+        "Arguments": {
+          "--password.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.password",
+          "--end_points.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.end_points",
+          "--send_folder.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.send_folder",
+          "--bucket_name.$": "$.StatePayload.bucket",
+          "--file_name.$": "$.StatePayload.fileName",
+          "--topic_name.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.topic_name",
+          "--failed_folder.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.failed_folder",
+          "--username.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.username",
+          "--save_folder.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.save_folder",
+          "--conf.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.conf",
+          "--region_name.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.region_name",
+          "--file_format.$": "$.StatePayload.SM_ARN_KAFKA.sfStepsToDone.kafka_load_batch.file_format"
+        }
+      },
+      "ResultPath": "$.Output",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureTransactionUpdation",
+          "ResultPath": "$.errorDetails"
+        }
+      ],
+      "Next": "SuccessTransactionUpdation"
+    }
+  }
+}
